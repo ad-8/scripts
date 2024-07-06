@@ -45,14 +45,13 @@
 
 
 (comment
- (let [url    "https://api.openweathermap.org/data/2.5/onecall"
+  (let [url    "https://api.openweathermap.org/data/2.5/onecall"
         params {:query-params {:appid   appid
                                :lat     (:lat current-place)
                                :lon     (:lon current-place)
                                :units   "metric"
                                :exclude "minutely,hourly"}}]
-    (http/get url params)) 
-  )
+    (http/get url params)))
 
 (defn format-number
   "Sometimes the temperature from the API is an even number like 4,
@@ -146,8 +145,8 @@
 (defn print-for-i3bar-short [{:keys [status curr-temp curr-desc today+1 today+2 sun]}]
   (if (= 200 status)
 
-     {:text (format "%s°C %s"
-                         curr-temp curr-desc)}
+    {:text (format "%s°C %s"
+                   curr-temp curr-desc)}
 
     (printf "Error: status code %d\n" status)))
 
@@ -164,11 +163,14 @@
       (json/encode)))
 
 (defn dwmblocks []
-  (-> (make-request)
-      (parse-response)
-      (print-for-i3bar-short)
-      :text
-      println))
+  (let [location (:short current-place)
+        weather (-> (make-request)
+                    (parse-response)
+                    (print-for-i3bar-short)
+                    :text)
+        fmt (format "%s (%s)" weather location)]
+     fmt))
+
 
 (let [args *command-line-args*
       arg1 (first args)
@@ -177,4 +179,4 @@
                "short"  (foo-short)
                "dwm"    (dwmblocks)
                ":invalid-argument")]
-   (println output))
+  (println output))
