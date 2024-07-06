@@ -10,15 +10,19 @@
 (import 'java.time.format.DateTimeFormatter)
 
 (def script-dir (io/file (System/getProperty "user.home") "my" "scripts" "bb"))
+(def api-key-file (io/file script-dir "weather_key.edn"))
+
+(if-not (.exists api-key-file)
+  (println "weather: no api key"))
+
+(def appid (->> api-key-file
+                slurp
+                edn/read-string
+                :appid))
 
 (def places (->> (io/file script-dir "weather_locations.edn")
                  slurp
                  edn/read-string))
-
-(def appid (->> (io/file script-dir "weather_key.edn")
-                slurp
-                edn/read-string
-                :appid))
 
 (def current-place (:h places))
 
@@ -169,7 +173,7 @@
                     (print-for-i3bar-short)
                     :text)
         fmt (format "%s (%s)" weather location)]
-     fmt))
+    fmt))
 
 
 (let [args *command-line-args*
