@@ -154,17 +154,34 @@
 
     (printf "Error: status code %d\n" status)))
 
-(defn foo-long []
+
+(defn print-for-dunst [{:keys [status curr-temp curr-desc today+1 today+2 sun]}]
+  (if (= 200 status)
+
+    (format "%s°C  %s  (%s)\n%s\n\ntomorrow:  %s\nday after: %s\n"
+            curr-temp curr-desc (:short current-place)
+            sun
+            (:summary today+1) (:summary today+2))
+
+    (printf "Error: status code %d\n" status)))
+
+(defn output-long []
   (-> (make-request)
       (parse-response)
       (print-for-i3bar)
       (json/encode)))
 
-(defn foo-short []
+(defn output-short []
   (-> (make-request)
       (parse-response)
       (print-for-i3bar-short)
       (json/encode)))
+
+
+(defn output-dunst []
+  (-> (make-request)
+      (parse-response)
+      (print-for-dunst)))
 
 (defn dwmblocks []
   (let [location (:short current-place)
@@ -179,8 +196,9 @@
 (let [args *command-line-args*
       arg1 (first args)
       output (case arg1
-               "long"   (foo-long)
-               "short"  (foo-short)
+               "long"   (output-long)
+               "short"  (output-short)
                "dwm"    (dwmblocks)
+               "dunst"  (output-dunst)
                ":invalid-argument")]
   (println output))
