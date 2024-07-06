@@ -1,6 +1,6 @@
 #!/usr/bin/bb
 
-(ns i3weather
+(ns weather
   (:require  [babashka.http-client :as http]
              [cheshire.core :as json]
              [clojure.edn :as edn]
