@@ -158,7 +158,7 @@
 (defn print-for-dunst [{:keys [status curr-temp curr-desc today+1 today+2 sun]}]
   (if (= 200 status)
 
-    (format "%s°C  %s  (%s)\n%s\n\ntomorrow:  %s\nday after: %s\n"
+    (format "%s°C  %s  (%s)\n\n%s\n\ntomorrow:  %s\nday after: %s"
             curr-temp curr-desc (:short current-place)
             sun
             (:summary today+1) (:summary today+2))
