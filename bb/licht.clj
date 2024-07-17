@@ -48,7 +48,6 @@
     (printf "\nMacBook Display:  %s\nMacBook Keyboard: %s\n\nExternal Display:\n%s"
             disp keyb ext)))
 
-
 (defn illuminate! [int-b key-b ext-b ext-c col-t]
   (light-screen int-b) (light-keyboard key-b)
   (set-ext-brightness ext-b) (set-ext-contrast ext-c)
@@ -71,10 +70,8 @@
                        :vals [100 100 100 100 6500]}
                "max-e" {:name "Max External"
                        :vals [50 50 100 100 6500]}
-               "med1" {:name "Medium"
-                       :vals [50 50 67 55 4500]}
-               "med2" {:name "Medium"
-                       :vals [50 50 50 50 4000]}
+               "med" {:name "Medium"
+                       :vals [50 50 50 50 4250]}
                "kl"   {:name "Kino Low"
                        :vals [0 5 50 40 3333]}
                "kl2"   {:name "Kino Low 2"
@@ -95,5 +92,5 @@
                         first))
       selected-value (get settings user-choice)]
   (apply illuminate! (:vals selected-value))
-  (spit "/tmp/licht-ed16d5b5" (str user-choice "\n"))
+  (spit "/tmp/licht-curr-val" (str user-choice "\n"))
   (shell "notify-send" (str "💡 licht = " (:name selected-value))))
