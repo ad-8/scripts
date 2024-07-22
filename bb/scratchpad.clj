@@ -2,6 +2,7 @@
   (:require  [babashka.http-client :as http]
              [cheshire.core :as json]
              [clojure.string :as str]
+             [clojure.java.shell :refer [sh]]
              [clojure.walk]))
 
 ; ready to go
@@ -12,29 +13,23 @@
        clojure.walk/keywordize-keys))
 
 
+(def now (java.time.ZonedDateTime/now))
+now
 
-(def base  (->> "/home/ax/.config/i3/config"
-                slurp
-                str/split-lines
-                (filter #(str/includes? % "bindsym"))
-                (remove #(str/starts-with? % "   "))
-                (remove #(str/starts-with? % "       "))
-                (remove #(str/includes? % "XF86"))
-                (remove #(str/includes? % "workspace number $"))
-                (remove #(str/includes? % (or "move" "focus")))
-                sort
+(defn babashka-latest-version []
+  (-> (sh "curl" "https://api.github.com/repos/babashka/babashka/tags")
+      :out
+      (json/parse-string true)
+      first
+      :name))
 
-     ;;
-                ))
+(-> (sh "curl" "https://api.github.com/repos/babashka/babashka/tags")
+    
+    :out
+    (json/parse-string true) 
+    :name)
 
-(->> base
-     (filter #(str/includes? (str/lower-case %) "shift")))
+(babashka-latest-version)
 
-(->> base
-     (filter #(str/includes? (str/lower-case %) "mod1")))
 
-(->> base
-     (filter #(str/includes? (str/lower-case %) "scripts/bb")))
-
-(->> base
-     (remove #(re-find #"(shift|mod1|scripts/bb)" (str/lower-case %))))
+(sh "df" "-h" "/" "--output=avail")
