@@ -1,0 +1,45 @@
+#!/usr/bin/env bb
+(ns brightness
+  (:require [clojure.string :as str]
+            [babashka.process :refer [shell]]))
+
+
+(def device-commands
+  {"screen"   {:get "light"
+               :inc "/usr/bin/light -A 5"
+               :dec "/usr/bin/light -U 5"}
+   "keyboard" {:get "light -s sysfs/leds/smc::kbd_backlight"
+               :inc "/usr/bin/light -s sysfs/leds/smc::kbd_backlight -A 5"
+               :dec "/usr/bin/light -s sysfs/leds/smc::kbd_backlight -U 5"}})
+
+
+(defn parse-and-round [s]
+  (-> s Double/parseDouble Math/round int))
+
+
+(defn get-brightness [device]
+  (-> (shell {:out :string} (get-in device-commands [device :get]))
+      :out str/trim parse-and-round))
+
+
+(defn inc-brightness [device]
+  (shell (get-in device-commands [device :inc])))
+
+
+(defn dec-brightness [device]
+  (shell (get-in device-commands [device :dec])))
+
+
+(defn ntfy [device]
+  (let [bri (get-brightness device)
+        hint (format "int:value:%d" bri)
+        cmd (format "notify-send brightness \"%s %s\" --app-name=brightness --hint=%s --expire-time=2000 
+                     --icon brightness --replace-id=124 --urgency=low" device bri hint)]
+    (shell cmd)))
+
+
+(let [[device action] *command-line-args*]
+  (case action
+    "inc" (and (inc-brightness device) (ntfy device))
+    "dec" (and (dec-brightness device) (ntfy device))
+    (println "unknown command")))
