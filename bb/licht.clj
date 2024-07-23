@@ -57,7 +57,7 @@
 (def settings {"aus"  {:name "AUS"
                        :vals [0 0 0 0 0]}
                "hi"   {:name "High"
-                       :vals [80 80 80 80 6000]}
+                       :vals [80 0 80 80 6000]}
                "hi2"  {:name "High2"
                        :vals [67 67 67 67 6000]}
                "lo"   {:name "Low"
@@ -67,9 +67,9 @@
                "ul2"  {:name "Ultra Low"
                        :vals [10 10 15 15 3000]}
                "max"  {:name "Max"
-                       :vals [100 100 100 100 6500]}
+                       :vals [100 0 100 100 6500]}
                "max-e" {:name "Max External"
-                       :vals [50 50 100 100 6500]}
+                       :vals [50 0 100 100 6500]}
                "med" {:name "Medium"
                        :vals [50 50 50 50 4250]}
                "kl"   {:name "Kino Low"
@@ -90,7 +90,9 @@
                         deref :out str/trim
                         clojure.edn/read-string
                         first))
-      selected-value (get settings user-choice)]
+      selected-value (get settings user-choice)
+      ntfy (format "notify-send Licht %s --app-name dwm-licht --expire-time 4000 --icon brightness-high-symbolic
+                  --replace-id 126" (:name selected-value))]
   (apply illuminate! (:vals selected-value))
   (spit "/tmp/licht-curr-val" (str user-choice "\n"))
-  (shell "notify-send" (str "💡 licht = " (:name selected-value))))
+  (shell ntfy))
