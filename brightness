@@ -13,13 +13,9 @@
                :dec "/usr/bin/light -s sysfs/leds/smc::kbd_backlight -U 5"}})
 
 
-(defn parse-and-round [s]
-  (-> s Double/parseDouble Math/round int))
-
-
 (defn get-brightness [device]
   (-> (shell {:out :string} (get-in device-commands [device :get]))
-      :out str/trim parse-and-round))
+      :out str/trim Double/parseDouble Math/round int))
 
 
 (defn inc-brightness [device]
@@ -33,8 +29,8 @@
 (defn ntfy [device]
   (let [bri (get-brightness device)
         hint (format "int:value:%d" bri)
-        cmd (format "notify-send brightness \"%s %s\" --app-name=brightness --hint=%s --expire-time=2000 
-                     --icon brightness --replace-id=124 --urgency=low" device bri hint)]
+        cmd (format "notify-send Brightness \"%s %s\" --app-name=Brightness --hint=%s --expire-time=2000 
+                     --icon brightness --replace-id=124 --urgency=low" (str/capitalize device) bri hint)]
     (shell cmd)))
 
 

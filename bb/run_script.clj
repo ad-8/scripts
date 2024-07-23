@@ -7,19 +7,18 @@
 
 
 (def home (System/getProperty "user.home"))
-(def int-scripts (->> (fs/glob (io/file home "scripts" "bb") "**{.clj,cljc}")
+(def int-scripts (->> (fs/glob (io/file home "my" "scripts" "bb") "**{.clj,cljc}")
                       (map str)))
-
 (def ext-scripts (->> [
-                   
-                ;;    "~/code/scripts/bb/src/ntfy.clj" ;; TODO edit to use w/ dmenu
-                   "~/.config/i3/dmenuunicode"]
+                ;;   "~/.config/i3/dmenuunicode"
+                       ]
                   (map #(str/replace-first % "~" home))))
 
 
 (def all-scripts (->> (concat int-scripts ext-scripts)
-                      ;(map #(str/replace-first % home "~"))
+                      (map #(str/replace-first % home "~"))
                       sort))
+
 
 (defn get-dmenu-user-selection [opts]
   (-> (process "echo" "-e" (str/join "\n" opts))
