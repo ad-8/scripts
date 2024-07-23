@@ -29,7 +29,7 @@
 (defn ntfy [device]
   (let [bri (get-brightness device)
         hint (format "int:value:%d" bri)
-        cmd (format "notify-send Brightness \"%s %s\" --app-name=Brightness --hint=%s --expire-time=2000 
+        cmd (format "notify-send Brightness \"%s %s\" --app-name=dwm-brightness --hint=%s --expire-time=2000 
                      --icon brightness --replace-id=124 --urgency=low" (str/capitalize device) bri hint)]
     (shell cmd)))
 
