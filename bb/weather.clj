@@ -9,22 +9,16 @@
 
 (import 'java.time.format.DateTimeFormatter)
 
-(def script-dir (io/file (System/getProperty "user.home") "my" "scripts" "bb"))
-(def api-key-file (io/file script-dir "weather_key.edn"))
+(def settings-file (io/file (System/getProperty "user.home") "my" "scripts" "bb" "weather.edn"))
 
-(if-not (.exists api-key-file)
-  (println "weather: no api key"))
+(when-not (.exists settings-file)
+  (println "weather: no api key")
+  (System/exit 0))
 
-(def appid (->> api-key-file
-                slurp
-                edn/read-string
-                :appid))
+(def settings (-> settings-file slurp edn/read-string))
 
-(def places (->> (io/file script-dir "weather_locations.edn")
-                 slurp
-                 edn/read-string))
-
-(def current-place (:h places))
+;; TODO change location when needed
+(def current-place (get-in settings [:locations :h]))
 
 
 (defn timestamp->datetime
@@ -40,22 +34,13 @@
 ;; https://openweathermap.org/api/one-call-api
 (defn make-request []
   (let [url    "https://api.openweathermap.org/data/2.5/onecall"
-        params {:query-params {:appid   appid
+        params {:query-params {:appid   (:appid settings)
                                :lat     (:lat current-place)
                                :lon     (:lon current-place)
                                :units   "metric"
                                :exclude "minutely,hourly"}}]
     (http/get url params)))
 
-
-(comment
-  (let [url    "https://api.openweathermap.org/data/2.5/onecall"
-        params {:query-params {:appid   appid
-                               :lat     (:lat current-place)
-                               :lon     (:lon current-place)
-                               :units   "metric"
-                               :exclude "minutely,hourly"}}]
-    (http/get url params)))
 
 (defn format-number
   "Sometimes the temperature from the API is an even number like 4,
@@ -96,11 +81,9 @@
      (:body (http/get url {:as :stream}))
      (io/file filename))))
 
+
 (defn parse-response [resp]
-  (let [body (->> resp
-                  :body
-                  (json/parse-string)
-                  (map #(clojure.walk/keywordize-keys %)))
+  (let [body (->> resp :body json/parse-string (map clojure.walk/keywordize-keys))
         current (update (->> body     ; seq, count = 6: ("lat" "lon" "timezone" "timezone_offset" "current" "daily")
                              (drop 4)
                              (take 1)
@@ -134,11 +117,18 @@
         today+1 (->> forecast (drop 1) (take 1) first parse-day)
         today+2 (->> forecast (drop 2) (take 1) first parse-day)]
 
-    (download-icon curr-icon "/tmp/curr-weather-icon.png")
+    (download-icon curr-icon (:icon-path settings))
 
     {:status (:status resp), :curr-temp curr-temp, :curr-desc curr-desc,
      :sun (sun-rise-set forecast) :body body,
      :forecast forecast, :today+1 today+1, :today+2 today+2}))
+
+
+(comment
+  (-> (make-request)
+      (parse-response))
+  ;;
+  )
 
 ; JSON FORMAT for i3status-rs
 ; {"icon": "...", "state": "...", "text": "...", "short_text": "..."}
@@ -152,16 +142,13 @@
      :short_text (format "%s°C   %s   %s"
                          curr-temp curr-desc (:short current-place))}
 
-    (printf "Error: status code %d\n" status)))
+    {:text (format "Request Error: status code %d" status)}))
 
 
-(defn print-for-i3bar-short [{:keys [status curr-temp curr-desc today+1 today+2 sun]}]
+(defn print-for-i3bar-short [{:keys [status curr-temp curr-desc]}]
   (if (= 200 status)
-
-    {:text (format "%s°C %s"
-                   curr-temp curr-desc)}
-
-    (printf "Error: status code %d\n" status)))
+    {:text (format "%s°C %s" curr-temp curr-desc)}
+    {:text (format "Request Error: status code %d" status)}))
 
 
 (defn notify-dunst [{:keys [status forecast curr-temp curr-desc today+1 today+2 sun]}]
@@ -174,45 +161,23 @@
         fmt-err (format "Error: status code %d\n" status)]
 
     (if (= 200 status)
-      (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\""
-                     "i3w" "/tmp/curr-weather-icon.png" fmt))
-      (shell (format "notify-send --app-name %s Weather %s" "i3w" fmt-err)))))
+      (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\"" "dunst-weather" (:icon-path settings) fmt))
+      (shell (format "notify-send --app-name \"%s\" Weather \"%s\"" "dunst-weather" fmt-err)))))
 
 
-(defn output-long []
-  (-> (make-request)
-      (parse-response)
-      (print-for-i3bar)
-      (json/encode)))
-
-(defn output-short []
-  (-> (make-request)
-      (parse-response)
-      (print-for-i3bar-short)
-      (json/encode)))
-
-
-(defn output-dunst []
-  (-> (make-request)
-      (parse-response)
-      (notify-dunst)))
-
-(defn dwmblocks []
+(defn dwmblocks [parsed-response]
   (let [location (:short current-place)
-        weather (-> (make-request)
-                    (parse-response)
-                    (print-for-i3bar-short)
-                    :text)
+        weather (-> parsed-response print-for-i3bar-short :text)
         fmt (format "%s (%s)" weather location)]
     fmt))
 
 
-(let [args *command-line-args*
-      arg1 (first args)
+(let [arg1 (first *command-line-args*)
+      parsed-resp (-> (make-request) parse-response)
       output (case arg1
-               "long"   (output-long)
-               "short"  (output-short)
-               "dwm"    (dwmblocks)
-               "dunst"  (output-dunst)
+               "long"   (-> parsed-resp print-for-i3bar json/encode)
+               "short"  (-> parsed-resp print-for-i3bar-short json/encode)
+               "dwm"    (dwmblocks parsed-resp)
+               "dunst"  (notify-dunst parsed-resp)
                ":invalid-argument")]
   (println output))

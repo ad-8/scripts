@@ -15,5 +15,4 @@ pom.xml.asc
 .clj-kondo/
 .lsp/
 .calva/
-bb/weather_key.edn
-bb/weather_locations.edn
+bb/weather.edn
