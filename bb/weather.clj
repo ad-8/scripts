@@ -1,7 +1,7 @@
-#!/usr/bin/bb
-
+#!/usr/bin/env bb
 (ns weather
   (:require  [babashka.http-client :as http]
+             [babashka.process :refer [shell]]
              [cheshire.core :as json]
              [clojure.edn :as edn]
              [clojure.java.io :as io]
@@ -90,6 +90,12 @@
         sunrise (-> fs second :sunrise dt->hhmm)]
     (format "↓%s ↑%s" sunset sunrise)))
 
+(defn download-icon [icon filename]
+  (let [url (format "https://openweathermap.org/img/wn/%s.png" icon)]
+    (io/copy
+     (:body (http/get url {:as :stream}))
+     (io/file filename))))
+
 (defn parse-response [resp]
   (let [body (->> resp
                   :body
@@ -124,11 +130,14 @@
                  format-number)
         curr-temp (-> current :temp format-number)
         curr-desc (-> current :weather first :description)
+        curr-icon (-> current :weather first :icon)
         today+1 (->> forecast (drop 1) (take 1) first parse-day)
         today+2 (->> forecast (drop 2) (take 1) first parse-day)]
 
+    (download-icon curr-icon "/tmp/curr-weather-icon.png")
+
     {:status (:status resp), :curr-temp curr-temp, :curr-desc curr-desc,
-     :sun (sun-rise-set forecast) :body body
+     :sun (sun-rise-set forecast) :body body,
      :forecast forecast, :today+1 today+1, :today+2 today+2}))
 
 ; JSON FORMAT for i3status-rs
@@ -155,15 +164,20 @@
     (printf "Error: status code %d\n" status)))
 
 
-(defn print-for-dunst [{:keys [status curr-temp curr-desc today+1 today+2 sun]}]
-  (if (= 200 status)
+(defn notify-dunst [{:keys [status forecast curr-temp curr-desc today+1 today+2 sun]}]
+  (let [today (parse-day (first forecast))
+        fmt (format "%s°C  %s  (%s)\n\n%s\n\ntoday:     %s %s %s\ntomorrow:  %s\nday after: %s"
+                    curr-temp curr-desc (:short current-place)
+                    sun
+                    (:min-fmt today) (:max-fmt today) (:desc today)
+                    (:summary today+1) (:summary today+2))
+        fmt-err (format "Error: status code %d\n" status)]
 
-    (format "%s°C  %s  (%s)\n\n%s\n\ntomorrow:  %s\nday after: %s"
-            curr-temp curr-desc (:short current-place)
-            sun
-            (:summary today+1) (:summary today+2))
+    (if (= 200 status)
+      (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\""
+                     "i3w" "/tmp/curr-weather-icon.png" fmt))
+      (shell (format "notify-send --app-name %s Weather %s" "i3w" fmt-err)))))
 
-    (printf "Error: status code %d\n" status)))
 
 (defn output-long []
   (-> (make-request)
@@ -181,7 +195,7 @@
 (defn output-dunst []
   (-> (make-request)
       (parse-response)
-      (print-for-dunst)))
+      (notify-dunst)))
 
 (defn dwmblocks []
   (let [location (:short current-place)
