@@ -2,7 +2,6 @@
 (ns licht
   (:require [clojure.java.shell :refer [sh]]
             [clojure.string :as str]
-            [babashka.cli :as cli]
             [clojure.edn]
             [babashka.process :refer [shell process]]))
 
@@ -41,12 +40,18 @@
   (sh "sct" (str n)))
 
 
+
+(defn heading [s] 
+  (let [line (apply str (repeat (count s) "-"))]
+    (format "%s\n%s\n%s" line s line)))
+
+
 (defn print-all-the-light-we-can-see []
   (let [disp (get-light-screen)
         keyb (get-light-keyboard)
         ext  (get-ext-vals)]
-    (printf "\nMacBook Display:  %s\nMacBook Keyboard: %s\n\nExternal Display:\n%s"
-            disp keyb ext)))
+    (printf "%s\nDisplay:  %s\nKeyboard: %s" (heading "Internal") disp keyb)
+    (printf "\n\n%s\n%s" (heading "External") ext)))
 
 (defn illuminate! [int-b key-b ext-b ext-c col-t]
   (light-screen int-b) (light-keyboard key-b)
@@ -69,9 +74,9 @@
                "max"  {:name "Max"
                        :vals [100 0 100 100 6500]}
                "max-e" {:name "Max External"
-                       :vals [50 0 100 100 6500]}
+                        :vals [50 0 100 100 6500]}
                "med" {:name "Medium"
-                       :vals [50 50 50 50 4250]}
+                      :vals [50 50 50 50 4250]}
                "kl"   {:name "Kino Low"
                        :vals [0 5 50 40 3333]}
                "kl2"   {:name "Kino Low 2"
@@ -81,18 +86,27 @@
                "km"   {:name "Kino Max"
                        :vals [0 0 100 100 6500]}})
 
-(let [args *command-line-args*
-      valid-arg (get settings (first args))
-      user-choice (if valid-arg
-                    (first args)
-                    (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
-                        (process {:out :string} "dmenu" "-i" "-l" "25" "-p" "licht")
-                        deref :out str/trim
-                        clojure.edn/read-string
-                        first))
-      selected-value (get settings user-choice)
-      ntfy (format "notify-send Licht %s --app-name dwm-licht --expire-time 4000 --icon brightness-high-symbolic
-                  --replace-id 126" (:name selected-value))]
-  (apply illuminate! (:vals selected-value))
-  (spit "/tmp/licht-curr-val" (str user-choice "\n"))
-  (shell ntfy))
+
+(defn ask-user
+  "Lets the user choose a setting interactively via dmenu."
+  []
+  (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
+      (process {:out :string} "dmenu" "-i" "-l" "25" "-p" "licht")
+      deref :out str/trim clojure.edn/read-string first))
+
+
+(defn set-lights! [first-arg]
+  (let [valid-arg (get settings first-arg)
+        user-choice (if valid-arg first-arg (ask-user))
+        selected-value (get settings user-choice)
+        ntfy (format "notify-send Licht %s --app-name dwm-licht --expire-time 4000 --icon 
+                      brightness-high-symbolic --replace-id 126" (:name selected-value))]
+    (apply illuminate! (:vals selected-value))
+    (spit "/tmp/licht-curr-val" (str user-choice "\n"))
+    (shell ntfy)))
+
+
+(let [fst (first *command-line-args*)]
+  (if (= "get" fst)
+    (print-all-the-light-we-can-see)
+    (set-lights! fst)))
