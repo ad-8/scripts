@@ -16,9 +16,7 @@
   (System/exit 0))
 
 (def settings (-> settings-file slurp edn/read-string))
-
-;; TODO change location when needed
-(def current-place (get-in settings [:locations :h]))
+(def current-place (get-in settings [:locations (:curr-loc settings)]))
 
 
 (defn timestamp->datetime
