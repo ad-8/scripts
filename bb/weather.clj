@@ -9,7 +9,7 @@
 
 (import 'java.time.format.DateTimeFormatter)
 
-(def settings-file (io/file (System/getProperty "user.home") "my" "scripts" "bb" "weather.edn"))
+(def settings-file (io/file (System/getProperty "user.home") "my" "scripts" "weather.edn"))
 
 (when-not (.exists settings-file)
   (println "weather: no api key")
