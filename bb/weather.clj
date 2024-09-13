@@ -13,14 +13,10 @@
             [clojure.walk :refer [keywordize-keys]]))
 
 
-(defn make-request [url query-params]
-  (let [url    url
-        params {:query-params query-params}]
-    (http/get url params)))
 
 
 (def settings-file (io/file (System/getProperty "user.home") "my" "cfg" "weather.edn"))
-(def weather-codes-file (io/file (System/getProperty "user.home") "my" "cfg" "descriptions.json"))
+(def weather-codes-file (io/file (System/getProperty "user.home") "my" "cfg" "weather-codes.json"))
 (def weather-codes (-> weather-codes-file
                        slurp
                        json/decode
@@ -28,10 +24,12 @@
 
 (when-not (.exists settings-file)
   (println "failed to read weather.edn")
-  (System/exit 0))
+  (System/exit 1))
 
 (def settings (-> settings-file slurp edn/read-string))
 (def current-place (get-in settings [:locations (:curr-loc settings)]))
+
+
 (def url "https://api.open-meteo.com/v1/forecast"),
 
 (def query-params {:latitude (:lat current-place)
@@ -46,31 +44,22 @@
                    })
 
 
-(def data (->> (make-request url query-params)
-               :body
-               json/decode
-               keywordize-keys))
 
-(def sunshine_hrs (->> data :daily :sunshine_duration
-                       (map #(/ % 3600))
-                       (map #(format "%.1f" %))
-                       (map #(Double/parseDouble %))))
+(defn make-request [url query-params]
+  (let [url    url
+        params {:query-params query-params}
+        resp (try (http/get url params)
+                  (catch Exception e (println (.getMessage e))))]
+    (if (= 200 (:status resp))
+      resp
+      (System/exit 1))))
 
-#_(defn parse-day [d]
-    (let [dt  (get d :dt)
-          min (get-in d [:temp :min])
-          max (get-in d [:temp :max])
-          min-fmt (format-number min)
-          max-fmt (format-number max)
-          main (-> d :weather first :main)
-          desc (-> d :weather first :description)
-          d-fmt (format "%s %s %s" min-fmt max-fmt desc)]
 
-      {:dt dt     :summary d-fmt
-       :min min   :min-fmt min-fmt
-       :max max   :max-fmt max-fmt
-       :main main :desc desc}))
-
+(defn sunshine_hrs [data]
+  (->> data :daily :sunshine_duration
+       (map #(/ % 3600))
+       (map #(format "%.1f" %))
+       (map #(Double/parseDouble %))))
 
 (defn format-number
   "Sometimes the temperature from the API is an even number like 4,
@@ -97,25 +86,11 @@
      :sunshine-duration sunshine-duration
      :precipitation-sum precipitation-sum}))
 
-(defn notify-dunst [{:keys [status forecast curr-temp curr-desc today+1 today+2 sun]}]
-  (let [today "today"
-        fmt (format "%s°C  %s  (%s)\n\n%s\n\ntoday:     %s %s %s\ntomorrow:  %s\nday after: %s"
-                    curr-temp curr-desc (:short current-place)
-                    sun
-                    (:min-fmt today) (:max-fmt today) (:desc today)
-                    (:summary today+1) (:summary today+2))
-        fmt-err (format "Error: status code %d\n" status)]
 
-    (if (= 200 status)
-      (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\"" "dunst-weather" (:icon-path settings) fmt))
-      (shell (format "notify-send --app-name \"%s\" Weather \"%s\"" "dunst-weather" fmt-err)))))
-
-
-(defn download-icon [icon filename]
-  (let [url icon]
-    (io/copy
-     (:body (http/get url {:as :stream}))
-     (io/file filename))))
+(defn download-icon [url filename]
+  (io/copy
+   (:body (http/get url {:as :stream}))
+   (io/file filename)))
 
 
 (defn find-code [code]
@@ -166,9 +141,7 @@
                         (sun-rise-set today today+1)
                         (fmt today)
                         (fmt today+1) (fmt today+2))]
-    (println curr-icon)
     (download-icon curr-icon (:icon-path settings))
-    #_(shell "notify-send" fmt-old)
     (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\"" "dunst-weather" (:icon-path settings) fmt-old))
     #_(if (= 200 status)
         (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\"" "dunst-weather" (:icon-path settings) fmt))
@@ -192,12 +165,9 @@
 
 
 (let [arg1 (first *command-line-args*)
-      ;; parsed-resp (-> (make-request) parse-response)
+      resp (make-request url query-params)
+      data (-> resp :body json/decode keywordize-keys)
       output (case arg1
-              ;;  "long"   (-> parsed-resp print-for-i3bar json/encode)
-              ;;  "short"  (-> parsed-resp print-for-i3bar-short json/encode)
-              ;;  "dwm"    (dwmblocks parsed-resp)
-              ;;  "dunst"  (notify-dunst parsed-resp)
                "dunst" (forecast data)
                "dwm" (dwmblocks data)
                ":invalid-argument")]
@@ -265,13 +235,18 @@
 
 
 (comment
+
+  (def data (->> (make-request url query-params)
+                 :body
+                 json/decode
+                 keywordize-keys))
   (keys data)
 
   (:current data)
   (:daily data)
+  (forecast data)
 
   (def daily (:daily data))
-
   (parse-day daily 1)
 
   (into (sorted-map) daily)
