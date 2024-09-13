@@ -17,21 +17,19 @@
 
 (def settings-file (io/file (System/getProperty "user.home") "my" "cfg" "weather.edn"))
 (def weather-codes-file (io/file (System/getProperty "user.home") "my" "cfg" "weather-codes.json"))
-(def weather-codes (-> weather-codes-file
-                       slurp
-                       json/decode
-                       clojure.walk/keywordize-keys))
+(def weather-codes (-> weather-codes-file slurp json/decode clojure.walk/keywordize-keys))
+
 
 (when-not (.exists settings-file)
   (println "failed to read weather.edn")
   (System/exit 1))
+
 
 (def settings (-> settings-file slurp edn/read-string))
 (def current-place (get-in settings [:locations (:curr-loc settings)]))
 
 
 (def url "https://api.open-meteo.com/v1/forecast"),
-
 (def query-params {:latitude (:lat current-place)
                    :longitude (:lon current-place)
                    :timezone "Europe/Berlin"
@@ -39,10 +37,9 @@
                    :models "icon_seamless"
                    ;; all checkboxes checked for :daily
                    :daily ["weather_code", "temperature_2m_max", "temperature_2m_min", "apparent_temperature_max", "apparent_temperature_min", "sunrise", "sunset", "daylight_duration", "sunshine_duration", "precipitation_sum", "rain_sum", "showers_sum", "snowfall_sum", "precipitation_hours", "precipitation_probability_max", "wind_speed_10m_max", "wind_gusts_10m_max", "wind_direction_10m_dominant", "shortwave_radiation_sum", "et0_fao_evapotranspiration"]
+                   ;; Every weather variable available in hourly data, is available as current condition as well.
                    :current ["weather_code" "is_day" "temperature_2m", "precipitation", "rain", "cloud_cover", "precipitation_probability"]
-                  ;;  :hourly ["temperature_2m", "precipitation_probability", "precipitation", "cloud_cover"]
-                   })
-
+                   :hourly ["weather_code", "temperature_2m", "precipitation_probability", "precipitation", "cloud_cover"]})
 
 
 (defn make-request [url query-params]
@@ -61,12 +58,14 @@
        (map #(format "%.1f" %))
        (map #(Double/parseDouble %))))
 
+
 (defn format-number
   "Sometimes the temperature from the API is an even number like 4,
   which, when formatted with the format string used below, throws an exception
   when used with an integer, so we need to explicitly parse to a float"
   [num]
   (format "%.0f" (float num)))
+
 
 (defn parse-day [daily-data i]
   (let [dt (nth (:time daily-data) i)
@@ -95,10 +94,8 @@
 
 (defn find-code [code]
   (let [code (-> code str keyword)]
+    (-> (filter #(= code (first %)) weather-codes) first)))
 
-    (->> (filter #(= code (first %)) weather-codes)
-         first)))
-(find-code 3)
 
 (defn code-desc [code day?]
   (if day?
@@ -115,16 +112,19 @@
 (defn extract-time [dt]
   (-> dt (str/split #"T") last))
 
+
 (defn sun-rise-set [today tomorrow]
   (let [sunset  (-> today :sunset extract-time)
         sunrise (-> tomorrow :sunrise extract-time)]
     (format "↓%s ↑%s" sunset sunrise)))
+
 
 (defn fmt [day]
   (format "%2d %2d %s"
           (Integer/parseInt (:temp-min day))
           (Integer/parseInt (:temp-max day))
           (code-desc (:weather-code day) true)))
+
 
 (defn forecast [data]
   (let [curr (:current data)
@@ -153,6 +153,7 @@
     (format "%s°C %s" curr-temp curr-desc)
     (format "Request Error: status code %d" status)))
 
+
 (defn dwmblocks [data]
   (let [location (:short current-place)
         curr (:current data)
@@ -172,6 +173,7 @@
                "dwm" (dwmblocks data)
                ":invalid-argument")]
   (println output))
+
 
 
 
@@ -241,13 +243,19 @@
                  json/decode
                  keywordize-keys))
   (keys data)
+  (:current_units data)
+  (:hourly_units data)
 
   (:current data)
+  (keys (:hourly data))
   (:daily data)
   (forecast data)
 
   (def daily (:daily data))
+  (def hourly (:hourly data))
+
   (parse-day daily 1)
+  (:precipitation_hours daily)
 
   (into (sorted-map) daily)
 
@@ -260,48 +268,28 @@
                 (:temperature_2m_max daily)
                 (:sunshine_duration daily)
                 (:precipitation_sum daily)))
+
+
+  :hourly ["weather_code", "temperature_2m", "precipitation_probability", "precipitation", "cloud_cover"]
+  (partition 6 (interleave
+                (-> data :hourly :time)
+                (-> data :hourly :weather_code)
+                (:temperature_2m hourly)
+                (:precipitation hourly)
+                (:precipitation_probability hourly)
+                (:cloud_cover hourly)))
   ;;
   )
 
 
 (comment
-  sunshine_hrs
-  (flatten (map (fn [x] (repeat 24 x)) sunshine_hrs))
-
-  current-place
-
-  (let [secs (-> data :daily :sunshine_duration)
-        hrs (map (fn [x] (Float/parseFloat (format "%.1f" (/ x 3600)))) secs)]
-    (assoc-in data [:daily :sunshine_hours] hrs))
-
-  (:current data)
-  (:daily data)
-  data
-
-
-  (partition 3 (interleave
-                (-> data :daily :time)
-                (-> data :daily :sunrise)
-                (-> data :daily :sunset)))
-
-
-  (partition 5
-             (interleave
-              (-> data :hourly :time)
-              (-> data :hourly :temperature_2m)
-              (-> data :hourly :cloud_cover)
-              (-> data :hourly :precipitation_probability)
-              (-> data :hourly :precipitation)))
-
-
-
   (def outmap {:time (-> data :hourly :time)
                :temp (-> data :hourly :temperature_2m)
                :prec (-> data :hourly :precipitation)
                :prec_prob (-> data :hourly :precipitation_probability)
-               :sunshine_hrs (flatten (map (fn [x] (repeat 24 x)) sunshine_hrs))
+               :sunshine_hrs (flatten (map (fn [x] (repeat 24 x)) (sunshine_hrs data)))
                :loc (:long current-place)})
 
-
+  outmap
   (spit "/tmp/open-meteo.json" (json/encode outmap))
   (shell "/home/ax/my/code/python/weather-plot/venv/bin/python" "/home/ax/my/code/python/weather-plot/main.py"))
