@@ -154,14 +154,16 @@
     (format "Request Error: status code %d" status)))
 
 
-(defn dwmblocks [data]
+(defn dwmblocks [data wm]
   (let [location (:short current-place)
         curr (:current data)
         day? (if (= 0 (:is_day curr)) false true)
         curr-temp (-> curr :temperature_2m format-number)
         curr-desc (code-desc (:weather_code curr) day?)
         weather (print-for-i3bar-short 200 curr-temp curr-desc)
-        fmt (format "%s (%s)" weather location)]
+        fmt (case wm
+              "dwm" (format "%s (%s)" weather location)
+              "i3" (json/encode {:text (format "%s°C %s" curr-temp curr-desc)}))]
     fmt))
 
 
@@ -170,7 +172,8 @@
       data (-> resp :body json/decode keywordize-keys)
       output (case arg1
                "dunst" (forecast data)
-               "dwm" (dwmblocks data)
+               "dwm" (dwmblocks data "dwm")
+               "i3" (dwmblocks data "i3")
                ":invalid-argument")]
   (println output))
 

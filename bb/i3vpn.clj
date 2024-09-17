@@ -26,8 +26,8 @@
         args      *command-line-args* 
         ]
     (cond
-      (not= exit-code 0) {:text "Command failed" :state "Critical"}
-      (= stdout no-conn) {:text "NO VPN CONN" :state "Critical"}
+      (not= exit-code 0) (json/encode {:text "Command failed" :state "Critical"})
+      (= stdout no-conn) (json/encode {:text "NO VPN CONN" :state "Critical"})
       :else              (if (= "dwm" (first args))
                            (parse-stdout stdout)
                            (json/encode {:text (parse-stdout stdout)})))))

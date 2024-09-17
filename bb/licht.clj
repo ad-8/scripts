@@ -71,6 +71,8 @@
                        :vals [20 20 35 25 3000]}
                "ul2"  {:name "Ultra Low"
                        :vals [10 10 15 15 3000]}
+               "ni"  {:name "night"
+                       :vals [2 2 15 15 3000]}
                "max"  {:name "Max"
                        :vals [100 0 100 100 6500]}
                "max-e" {:name "Max External"
