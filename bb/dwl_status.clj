@@ -24,15 +24,8 @@
    :green  "#a3be8c"
    :lila   "#b48ead"})
 
-
-;(def formatter (DateTimeFormatter/ofPattern "dd.MM. HH:mm:ss"))
 (def formatter (DateTimeFormatter/ofPattern " E dd.MM.  HH:mm"))
 (def fmt-sec (DateTimeFormatter/ofPattern "ss"))
-
-(def formatter-all (DateTimeFormatter/ofPattern " HH:mm:ss"))
-;; echo " $(cat /tmp/licht-curr-val)"
-
-; (shell {:out :string} "cat /tmp/licht-curr-val")
 
 
 (defn shell-out
@@ -45,6 +38,7 @@
       "...")))
 
 
+;; dwlb -status all 'text ^bg(ff0000)^lm(foot)text^bg()^lm() text'
 ;; dwlb -status all 'text ^bg(ff0000)^lm(foot)text^bg()^lm() text'
 (defn bg
   "set background color for s"
@@ -62,26 +56,6 @@
   (format "^lm(%s)%s^lm()" cmd s))
 
 
-(comment
-  (let [now (LocalDateTime/now)]
-    (shell-out "pwd" now))
-
-  (def formatter2 (DateTimeFormatter/ofPattern "  e/c dd.MM.  HH:mm"))
-  (.format (LocalDateTime/now) formatter2)
-
-  (lm (fg "foo" "123") "pavu")
-
-  (def vol (shell-out "/home/ax/scripts/dwm-volume.sh" (LocalDateTime/now)))
-  (bg "foo" "ff0000")
-  (bg (fg "foo" "ff0000") (:red nord))
-  (fg "" (:polar4 nord))
-  (into (sorted-map) nord)
-  ;;
-  )
-
-
-
-
 (defn vpn [now]
   (let [status (shell-out "/home/ax/scripts/bb/i3vpn.clj dwm" now)]
     (if (str/includes? status "Critical")
@@ -89,31 +63,41 @@
       (fg status (:polar4 nord)))))
 
 
-
-(defn format-string 
+(defn format-string
   "A better `(format %s%s%s%s%s%s%s%s%s%s%s ...)`"
   [& args]
   (str/join "" (map #(format "%s" %) args)))
 
 
+(comment
+  (let [now (LocalDateTime/now)]
+    (shell-out "pwd" now))
 
-; dwlb -status all 'text ^bg(ff0000)^lm(foot)text^bg()^lm() text'
+  (def formatter2 (DateTimeFormatter/ofPattern "  e/c dd.MM.  HH:mm"))
+  (.format (LocalDateTime/now) formatter2)
+
+  (lm (bg (fg "foo bar baz" (:snow1 nord)) (:red nord)) "cmd-to-run")
+
+  (into (sorted-map) nord)
+  ;;
+  )
+
+
 (while true
   (let [now (LocalDateTime/now)
         date (.format now formatter)
         sec (Integer/parseInt (.format now fmt-sec))
         vpn (vpn now)
-      ;  weather (shell-out "/home/ax/scripts/bb/weather.clj dwm" 30 sec)
+        weather (shell-out "/home/ax/scripts/bb/weather.clj dwm" now)
         space (shell-out "/home/ax/scripts/bb/dwm_disk_space.clj" now)
         licht (shell-out "cat /tmp/licht-curr-val" now)
         volume (shell-out "/home/ax/scripts/dwm-volume.sh" now)
         sep (fg " | " (:polar4 nord))
-
         fmt (format "dwlb -status all '%s'"
                     (format-string
-                     (bg (fg "fix weather" (:snow1 nord)) (:red nord))
+                     (fg weather (:frost1 nord))
                      sep
-                     (lm (fg volume (:polar4 nord)) "thunar")
+                     (lm (fg volume (:polar4 nord)) "pavucontrol")
                      sep
                      (fg (str " " licht) (:polar4 nord))
                      sep
@@ -122,8 +106,7 @@
                      vpn
                      sep
                      (fg date (:frost1 nord))))]
-    
+
     (if (= 0 (mod sec 30))
       (shell fmt)
       (Thread/sleep 1000))))
-
