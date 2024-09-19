@@ -27,18 +27,23 @@
 (def formatter (DateTimeFormatter/ofPattern " E dd.MM.  HH:mm"))
 (def fmt-sec (DateTimeFormatter/ofPattern "ss"))
 
+(defn run [cmd]
+  (let [res (shell {:out :string} cmd)
+        code (:exit res)]
+    (if (= 0 code)
+      (-> res :out str/split-lines first)
+      (format "failed to run %s" cmd))))
+
 
 (defn shell-out
   "Calls cmd only if the current minute is at 0 or 30 seconds."
   [cmd now]
   (let [sec (Integer/parseInt (.format now fmt-sec))]
     (if (= 0 (mod sec 30))
-      (->> (shell {:out :string} cmd)
-           :out str/split-lines first)
+      (run cmd)
       "...")))
 
 
-;; dwlb -status all 'text ^bg(ff0000)^lm(foot)text^bg()^lm() text'
 ;; dwlb -status all 'text ^bg(ff0000)^lm(foot)text^bg()^lm() text'
 (defn bg
   "set background color for s"
@@ -59,8 +64,16 @@
 (defn vpn [now]
   (let [status (shell-out "/home/ax/scripts/bb/i3vpn.clj dwm" now)]
     (if (str/includes? status "Critical")
-      (fg status (:red nord))
+      (bg (fg "NO VPN CONN" (:snow3 nord)) (:red nord))
       (fg status (:polar4 nord)))))
+
+
+(defn try-weather
+  "weather scripts sometimes fails with status 429
+   and throws a exception"
+  [now]
+  (try (shell-out "/home/ax/scripts/bb/weather.clj dwm" now)
+       (catch Exception e "weather failed")))
 
 
 (defn format-string
@@ -88,7 +101,7 @@
         date (.format now formatter)
         sec (Integer/parseInt (.format now fmt-sec))
         vpn (vpn now)
-        weather (shell-out "/home/ax/scripts/bb/weather.clj dwm" now)
+        weather (try-weather now)
         space (shell-out "/home/ax/scripts/bb/dwm_disk_space.clj" now)
         licht (shell-out "cat /tmp/licht-curr-val" now)
         volume (shell-out "/home/ax/scripts/dwm-volume.sh" now)
