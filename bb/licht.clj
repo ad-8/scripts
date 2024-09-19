@@ -92,9 +92,11 @@
 (defn ask-user
   "Lets the user choose a setting interactively via dmenu."
   []
-  (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
-      (process {:out :string} "dmenu" "-i" "-l" "25" "-p" "licht")
-      deref :out str/trim clojure.edn/read-string first))
+  (let [session-type (-> (shell {:out :string} "/bin/bash -c" "echo $XDG_SESSION_TYPE") :out str/trim)
+        menu-cmd (if (= "wayland" session-type) "wmenu" "dmenu")]
+    (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
+        (process {:out :string} menu-cmd "-i" "-l" "15" "-p" "licht")
+        deref :out str/trim clojure.edn/read-string first)))
 
 
 (defn set-lights! [first-arg]
