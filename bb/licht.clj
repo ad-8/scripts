@@ -89,14 +89,40 @@
                        :vals [0 0 100 100 6500]}})
 
 
+(def nord
+  {:polar1 "#2e3440"
+   :polar2 "#3b4252"
+   :polar3 "#434c5e"
+   :polar4 "#4c566a"
+   :snow1  "#d8dee9"
+   :snow2  "#e5e9f0"
+   :snow3  "#eceff4"
+   :frost1 "#8fbcbb"
+   :frost2 "#88c0d0"
+   :frost3 "#81a1c1"
+   :frost4 "#5e81ac"
+   :red    "#bf616a"
+   :orange "#d08770"
+   :yellow "#ebcb8b"
+   :green  "#a3be8c"
+   :lila   "#b48ead"})
+
+
 (defn ask-user
   "Lets the user choose a setting interactively via dmenu."
   []
-  (let [session-type (-> (shell {:out :string} "/bin/bash -c" "echo $XDG_SESSION_TYPE") :out str/trim)
-        menu-cmd (if (= "wayland" session-type) "wmenu" "dmenu")]
-    (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
-        (process {:out :string} menu-cmd "-i" "-l" "15" "-p" "licht")
-        deref :out str/trim clojure.edn/read-string first)))
+  (let [session-type (-> (shell {:out :string} "/bin/bash -c" "echo $XDG_SESSION_TYPE") :out str/trim)]
+        (if (= "wayland" session-type)
+          (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
+              (process {:out :string} "wmenu" "-i" "-l" "15" "-p" "licht"
+                       "-f" "HackNerdFont 15" "-N" (:polar1 nord) "-M" (:orange nord)
+                       "-m" (:snow3 nord) "-S" (:orange nord) "-s" (:snow3 nord))
+              deref :out str/trim clojure.edn/read-string first)
+          (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
+              (process {:out :string} "dmenu" "-i" "-l" "15" "-p" "licht"
+                       "-fn" "HackNerdFont 15" "-nb" (:polar1 nord) "-nf" (:snow3 nord)
+                       "-sb" (:orange nord) "-sf" (:snow3 nord))
+              deref :out str/trim clojure.edn/read-string first))))
 
 
 (defn set-lights! [first-arg]
