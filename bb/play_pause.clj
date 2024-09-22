@@ -5,10 +5,10 @@
             [babashka.process :refer [shell]]))
 
 (def state->actions
-  {"play"  ["notify-send playerctl Playing... --app-name=dwm-play-pause --expire-time=2000 --icon exaile-play --replace-id=123 --urgency=low" 
-            "playerctl play"]
-   "pause" ["notify-send playerctl Pausing... --app-name=dwm-play-pause --expire-time=2000 --icon exaile-pause --replace-id=123 --urgency=low" 
-            "playerctl pause"]})
+  {:play  ["notify-send playerctl Playing... --app-name=dwm-play-pause --expire-time=2000 --icon exaile-play --replace-id=123 --urgency=low"
+           "playerctl play"]
+   :pause ["notify-send playerctl Pausing... --app-name=dwm-play-pause --expire-time=2000 --icon exaile-pause --replace-id=123 --urgency=low"
+           "playerctl pause"]})
 
 (defn execute-commands [cmds]
   (doseq [cmd cmds]
@@ -21,6 +21,6 @@
 
 (let [status (-> (shell {:out :string} "playerctl status") :out str/trim)]
   (case status
-    "Playing" (set-player "pause")
-    "Paused"  (set-player "play")
+    "Playing" (set-player :pause)
+    "Paused"  (set-player :play)
     :unknown-status))
