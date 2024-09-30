@@ -15,8 +15,10 @@
 (defn parse-stdout [stdout]
   (let [lines  (str/split-lines stdout)
         server (-> (nth lines 4) (str/split #"\t") last str/trim)
+        ks (-> (nth lines 10) (str/split #"\t") last str/trim)
+        ks' (if (= "Permanent" ks) :ok :danger)
         uptime (parse-uptime (last lines))]
-    (format " %s %s" server uptime)))
+    (format " %s %s %s" server uptime ks')))
 
 (defn i3vpn []
   (let [output    (shell/sh "protonvpn-cli" "status")

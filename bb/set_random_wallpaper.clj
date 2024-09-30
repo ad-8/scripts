@@ -17,7 +17,7 @@
 (def wallpaper-dir (io/file wallpaper-base))
 
 (defn set-wallpaper-xorg [path]
-  (let [feh (format "feh --bg-fill \"%s\"" path)]
+  (let [feh (format "feh --bg-max \"%s\"" path)]
     (shell/sh "sh" "-c" feh)
     (println "Wallpaper changed.")))
 
