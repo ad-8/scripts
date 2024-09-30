@@ -155,14 +155,14 @@
 
 
 (defn dwmblocks [data wm]
-  (let [location (:short current-place)
+  (let [location (:shortkw current-place)
         curr (:current data)
         day? (if (= 0 (:is_day curr)) false true)
         curr-temp (-> curr :temperature_2m format-number)
         curr-desc (code-desc (:weather_code curr) day?)
         weather (print-for-i3bar-short 200 curr-temp curr-desc)
         fmt (case wm
-              "dwm" (format "%s (%s)" weather location)
+              "dwm" (format "%s %s" weather location)
               "i3" (json/encode {:text (format "%s°C %s" curr-temp curr-desc)}))]
     fmt))
 

@@ -120,7 +120,7 @@
               deref :out str/trim clojure.edn/read-string first)
           (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
               (process {:out :string} "dmenu" "-i" "-l" "15" "-p" "licht"
-                       "-fn" "HackNerdFont 15" "-nb" (:polar1 nord) "-nf" (:snow3 nord)
+                       "-fn" "HackNerdFont-15" "-nb" (:polar1 nord) "-nf" (:snow3 nord)
                        "-sb" (:orange nord) "-sf" (:snow3 nord))
               deref :out str/trim clojure.edn/read-string first))))
 
