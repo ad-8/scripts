@@ -63,7 +63,10 @@
   which, when formatted with the format string used below, throws an exception
   when used with an integer, so we need to explicitly parse to a float"
   [num]
-  (format "%.0f" (float num)))
+  (let [fmt (format "%.0f" (float num))]
+    (if (= "-0" fmt) 
+      "0" 
+      fmt)))
 
 
 (defn parse-day [daily-data i]
