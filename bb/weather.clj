@@ -14,7 +14,6 @@
 
 
 
-
 (def settings-file (io/file (System/getProperty "user.home") "my" "cfg" "weather.edn"))
 (def weather-codes-file (io/file (System/getProperty "user.home") "my" "cfg" "weather-codes.json"))
 (def weather-codes (-> weather-codes-file slurp json/decode clojure.walk/keywordize-keys))
@@ -102,6 +101,23 @@
     (-> (find-code code) second :day :description)
     (-> (find-code code) second :night :description)))
 
+(comment
+
+(type weather-codes)
+(code-desc 63 3)
+
+  (find-code 96)
+
+(clojure.pprint/pprint weather-codes)
+(take 3 weather-codes)
+(keys weather-codes)
+(vals weather-codes)
+
+(for)
+
+;;
+)
+
 
 (defn code-img [code day?]
   (if day?
@@ -136,16 +152,19 @@
         today   (parse-day daily-data 0)
         today+1 (parse-day daily-data 1)
         today+2 (parse-day daily-data 2)
-        fmt-old (format "%s°C  %s  (%s)\n\n%s\n\ntoday:     %s\ntomorrow:  %s\nday after: %s"
+        ;; {:exit 1, :out , :err Unknown option -3°C  Foggy  (LOCATION)
+        ;; if the temp is negative and the whole string starts with -3°C, 
+        ;; it is interpreted as a shell argument like -y and causes an error with notify-send
+        fmt-old (format "   %s°C  %s  (%s)\n\n%s\n\ntoday:     %s\ntomorrow:  %s\nday after: %s"
                         curr-temp curr-desc (:short current-place)
                         (sun-rise-set today today+1)
                         (fmt today)
-                        (fmt today+1) (fmt today+2))]
+                        (fmt today+1) (fmt today+2))
+        shell-txt (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\""
+                          "dunst-weather" (:icon-path settings) fmt-old)]
+
     (download-icon curr-icon (:icon-path settings))
-    (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\"" "dunst-weather" (:icon-path settings) fmt-old))
-    #_(if (= 200 status)
-        (shell (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\"" "dunst-weather" (:icon-path settings) fmt))
-        (shell (format "notify-send --app-name \"%s\" Weather \"%s\"" "dunst-weather" fmt-err)))))
+    (shell shell-txt)))
 
 
 (defn print-for-i3bar-short [status curr-temp curr-desc]
@@ -178,6 +197,27 @@
   (println output))
 
 
+(comment 
+  (def res (make-request url query-params))
+  (def data (->> res
+                 :body
+                 json/decode
+                 keywordize-keys))
+
+  data
+  (keys data)
+  (get data :daily)
+
+  (try (forecast data)
+       (catch Exception e (str "error: " (.getMessage e))))
+
+  (dwmblocks data "dwm")
+
+  (try
+    (/ 1 0)
+    (catch Exception e (str "caught exception: " (.getMessage e))))
+
+  )
 
 
 (comment

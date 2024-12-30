@@ -1,5 +1,5 @@
 #!/usr/bin/env bb
-(ns weather
+(ns weather-old
   (:require  [babashka.http-client :as http]
              [babashka.process :refer [shell]]
              [cheshire.core :as json]
