@@ -42,8 +42,7 @@
 
 
 (defn make-request [url query-params]
-  (let [url    url
-        params {:query-params query-params}
+  (let [params {:query-params query-params}
         resp (try (http/get url params)
                   (catch Exception e (println (.getMessage e))))]
     (if (= 200 (:status resp))
@@ -70,22 +69,14 @@
 
 
 (defn parse-day [daily-data i]
-  (let [dt (nth (:time daily-data) i)
-        sunrise (nth (:sunrise daily-data) i)
-        sunset (nth (:sunset daily-data) i)
-        weather-code (nth (:weather_code daily-data) i)
-        temp-min (format-number (nth (:temperature_2m_min daily-data) i))
-        temp-max (format-number (nth (:temperature_2m_max daily-data) i))
-        sunshine-duration (nth (:sunshine_duration daily-data) i)
-        precipitation-sum (nth (:precipitation_sum daily-data) i)]
-    {:dt dt
-     :sunrise sunrise
-     :sunset sunset
-     :weather-code weather-code
-     :temp-min temp-min
-     :temp-max temp-max
-     :sunshine-duration sunshine-duration
-     :precipitation-sum precipitation-sum}))
+  {:dt (nth (:time daily-data) i)
+   :sunrise (nth (:sunrise daily-data) i)
+   :sunset (nth (:sunset daily-data) i)
+   :weather-code (nth (:weather_code daily-data) i)
+   :temp-min (format-number (nth (:temperature_2m_min daily-data) i))
+   :temp-max (format-number (nth (:temperature_2m_max daily-data) i))
+   :sunshine-duration (nth (:sunshine_duration daily-data) i)
+   :precipitation-sum (nth (:precipitation_sum daily-data) i)})
 
 
 (defn download-icon [url filename]
@@ -210,6 +201,7 @@
   data
   (keys data)
   (get data :daily)
+  (:current data)
 
   (try (forecast data)
        (catch Exception e (str "error: " (.getMessage e))))
