@@ -76,6 +76,8 @@
    :temp-min (format-number (nth (:temperature_2m_min daily-data) i))
    :temp-max (format-number (nth (:temperature_2m_max daily-data) i))
    :sunshine-duration (nth (:sunshine_duration daily-data) i)
+   :wind_gusts_10m_max (nth (:wind_gusts_10m_max daily-data) i)
+   :wind_speed_10m_max (nth (:wind_speed_10m_max daily-data) i)
    :precipitation-sum (nth (:precipitation_sum daily-data) i)})
 
 
@@ -100,7 +102,7 @@
 (type weather-codes)
 (code-desc 63 3)
 
-  (find-code 96)
+  (find-code 71)
 
 (clojure.pprint/pprint weather-codes)
 (take 3 weather-codes)
@@ -130,10 +132,12 @@
 
 
 (defn fmt [day]
-  (format "%2d %2d %s"
+  (format "%2d %2d %s .. %.0f/%.0f km/h"
           (Integer/parseInt (:temp-min day))
           (Integer/parseInt (:temp-max day))
-          (code-desc (:weather-code day) true)))
+          (code-desc (:weather-code day) true)
+          (:wind_speed_10m_max day)
+          (:wind_gusts_10m_max day)))
 
 
 (defn forecast [data]
@@ -251,7 +255,9 @@
                              :temp-min "7",
                              :temp-max "11",
                              :sunshine-duration 0.0,
-                             :precipitation-sum 5.5}
+                             :precipitation-sum 5.5
+                             :wind_gusts_10m_max 22.0
+                             :wind_speed_10m_max 9.7}
       daily-data-for-test 1 {:dt "2024-09-13",
                              :sunrise "2024-09-13T06:48",
                              :sunset "2024-09-13T19:30",
@@ -259,7 +265,9 @@
                              :temp-min "7",
                              :temp-max "10",
                              :sunshine-duration 0.0,
-                             :precipitation-sum 16.1}
+                             :precipitation-sum 16.1
+                             :wind_gusts_10m_max 36.7
+                             :wind_speed_10m_max 12.4}
       daily-data-for-test 2 {:dt "2024-09-14",
                              :sunrise "2024-09-14T06:50",
                              :sunset "2024-09-14T19:28",
@@ -267,7 +275,9 @@
                              :temp-min "6",
                              :temp-max "8",
                              :sunshine-duration 0.0,
-                             :precipitation-sum 57.6}))
+                             :precipitation-sum 57.6
+                             :wind_gusts_10m_max 42.1
+                             :wind_speed_10m_max 18.0}))
 
   (run-tests)
   ;;
@@ -285,12 +295,17 @@
   (:hourly_units data)
 
   (:current data)
+  data
   (keys (:hourly data))
   (:daily data)
   (forecast data)
 
   (def daily (:daily data))
   (def hourly (:hourly data))
+
+  (->> (keys daily) sort)
+  (into (sorted-map) daily)
+  (into (sorted-map) (:daily_units data))
 
   (parse-day daily 1)
   (:precipitation_hours daily)
