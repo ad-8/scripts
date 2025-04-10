@@ -16,7 +16,7 @@
 (defn parse-stdout [stdout]
   (let [lines  (str/split-lines stdout)
         server (-> (nth lines 4) (str/split #"\t") last str/trim)
-        ks (-> (nth lines 9) (str/split #"\t") last str/trim)
+        ks (-> (nth lines 10) (str/split #"\t") last str/trim)
         ks' (if (= "Permanent" ks) :ok :danger)
         uptime (parse-uptime (last lines))]
     (format " %s %s %s" server uptime ks')))
