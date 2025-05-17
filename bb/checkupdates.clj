@@ -2,7 +2,7 @@
 
 (ns checkupdates
   (:require [clojure.string :as str]
-            [clojure.pprint]
+            [clojure.pprint :refer [print-table]]
             [babashka.process :refer [sh]]))
 
 
@@ -15,17 +15,35 @@
      :new new}))
 
 
-(defn print-updates [lines]
-  (if (= [""] lines)
-    (println "no updates")
-    (do (clojure.pprint/print-table (map parse-line lines))
-        (printf "\n\nupdates: %d\n" (count lines)))))
-
-
 ;; sh works better than shell when working with empty :out or :err
-(let [lines (-> (sh ["checkupdates"]) :out str/split-lines)
-      news (-> (sh ["paru" "--show" "--news"]) :err)]
+(defn print-updates []
+  (let [lines (-> (sh ["checkupdates"]) :out str/split-lines)]
+    (if (= [""] lines)
+      (println "no updates")
+      (do (print-table (map parse-line lines))
+          (printf "\n\nupdates: %d\n" (count lines))))))
 
-  (print-updates lines)
-  (println "\n---\n")
-  (println (str/trim news)))
+
+(defn print-news []
+  (let [res (-> (sh ["paru" "--show" "--news"]))]
+    (if (= "" (:out res))
+      (println (str/trim (:err res)))
+      (println (str/trim (:out res))))))
+
+
+(defn print-flatpak []
+  (let [out (-> (sh ["flatpak" "remote-ls" "--updates"]) :out str/trim)]
+    (printf "Flatpak:\n%s\n" (if (= "" out) "-" out))))
+
+(defn print-rust []
+  (let [out (-> (sh ["rustup" "check"]) :out str/trim)]
+    (printf "Rust:\n%s\n" out)))
+
+
+(print-updates)
+(println "\n---\n")
+(print-news)
+(println "\n---\n")
+(print-flatpak)
+(println "\n---\n")
+(print-rust)
