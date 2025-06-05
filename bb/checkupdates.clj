@@ -36,8 +36,10 @@
     (printf "Flatpak:\n%s\n" (if (= "" out) "-" out))))
 
 (defn print-rust []
-  (let [out (-> (sh ["rustup" "check"]) :out str/trim)]
-    (printf "Rust:\n%s\n" out)))
+  (let [lines (-> (sh ["rustup" "check"]) :out str/trim str/split-lines)]
+    (if (every? #(str/includes? % "Up to date") lines)
+      (printf "Rust:\n-\n")
+      (printf "Rust:\n%s\n" lines))))
 
 
 (print-updates)
@@ -47,3 +49,4 @@
 (print-flatpak)
 (println "\n---\n")
 (print-rust)
+
