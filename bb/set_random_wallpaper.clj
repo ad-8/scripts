@@ -7,7 +7,7 @@
 
 
 
-(def wallpaper-base (io/file (System/getProperty "user.home") "sync" "wallpapers" "keira"))
+(def wallpaper-base (io/file (System/getProperty "user.home") "sync" "wallpapers" "wlgz"))
 
 (comment
   (->> (shell/sh "ls" (str wallpaper-base))
@@ -36,18 +36,19 @@
         ext  (.toLowerCase e)]
     (.endsWith file ext)))
 
+; w/o boolean, returns true or nil 
+; doesnt matter w/ filter, but old version of this fn returned true or false, so ...
 (defn picture?
   "Predicate Function that returns true if file is a picture."
   [f]
-  (or (ends-with-extension? f ".jpg")
-      (ends-with-extension? f ".jpeg")
-      (ends-with-extension? f ".png")))
+  (let [exts #{".jpg" ".jpeg" ".png"}]
+    (boolean (some #(ends-with-extension? f %) exts))))
 
 
 (defn random-wallpaper [dir]
   (->> dir
        file-seq
-       (filter picture?)
+       (filter picture?) ; removes e.g. the containing dir and obv. other files
        rand-nth))
 
 
