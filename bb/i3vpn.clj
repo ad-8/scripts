@@ -29,8 +29,8 @@
         no-conn   "\nNo active Proton VPN connection.\n"
         args      *command-line-args*]
     (cond
-      (not= 0 exit-code) (json/encode {:text "Command failed" :state "Critical"})
-      (= no-conn stdout) (json/encode {:text "NO VPN CONN" :state "Critical"})
+      (not= 0 exit-code) (json/encode {:text "Command failed" :state "Critical" :class "down"})
+      (= no-conn stdout) (json/encode {:text "NO VPN CONN" :state "Critical" :class "down"})
       :else              (if (= "dwm" (first args))
                            (parse-stdout stdout)
                            (json/encode {:text (parse-stdout stdout)})))))
