@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+# do NOT run this from ~/scripts (because it contains a bb directory,
+# which causes confusion with the executable of the same name
+# that gets extracted from the archive)
+
 # example URLs:
 # https://github.com/babashka/babashka/releases/download/v1.12.200/babashka-1.12.200-linux-amd64-static.tar.gz
 # https://github.com/babashka/babashka/releases/download/v1.12.200/babashka-1.12.200-linux-amd64-static.tar.gz.sha256
