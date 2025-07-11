@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [cheshire.core :as json]))
 
-(defn print-free-space [the-format]
+(defn print-free-space [output-fmt]
   (let [free-space-on-root (->> (shell {:out :string} "df -h / --output=avail")
                                 :out
                                 str/split-lines
@@ -15,7 +15,7 @@
         class (if (< free-space-int 25) :low :ok)
         json (json/encode {:text fmt :class class})]
 
-    (if (= "json" the-format)
+    (if (= "json" output-fmt)
       (println json)
       (println fmt))))
 
