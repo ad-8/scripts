@@ -1,7 +1,8 @@
 #!/usr/bin/env bb
 (ns ss
   (:require [babashka.process :refer [shell]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [cheshire.core :as json]))
 
 (defn timestamp []
   (-> (shell {:out :string} "date +%F_%H-%M-%S")
@@ -32,7 +33,24 @@
     (when (= 0 (:exit result))
       (notify file))))
 
+; hyprctl -j activewindow | jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"' | grim -g - ~/sync/screenshots/$(date +%F_%H-%M-%S).png && notify-send "screenshot taken" "saved in ~sync/screenshots" 
+; source: arch wiki
+(defn screenshot-window []
+  (let [file (filename)
+        json-str (:out (shell {:out :string} "hyprctl" "-j" "activewindow"))
+        data (json/parse-string json-str true) ;; true = keywordize keys
+        [x y] (:at data)
+        [w h] (:size data)
+        geo (format "%d,%d %dx%d" x y w h)
+        result (shell "grim" "-g" geo file)]
+    #_(clojure.pprint/pprint data)
+    (println "active window geometry:" geo)
+    (when (= 0 (:exit result))
+      (notify file))))
+
+
 (case (first *command-line-args*)
   "full" (screenshot-full)
   "area" (screenshot-area)
-  (println "Usage: bb ss.clj [full|area]"))
+  "window" (screenshot-window)
+  (println "Usage: bb ss.clj [full|area|window]"))
