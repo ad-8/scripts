@@ -6,10 +6,9 @@
 
 (defn get-hostname []
   (let [output (:out (shell {:out :string} "hostnamectl"))
-        ;; regex to capture the hostname after "Static hostname: "
-        hostname (re-find #"Static hostname:\s*(\S+)" output)]
-    (if hostname
-      (second hostname)
+        match (re-find #"Static hostname:\s*(\S+)" output)]
+    (if match
+      (last match)
       "unknown-hostname")))
 
 (defn determine-css-class [hostname used]
@@ -32,9 +31,8 @@
       (println fmt))))
 
 (defn run []
-  (let [args *command-line-args*]
-    (if (= "json" (first args))
-      (memory "json")
-      (memory "text"))))
+  (if (= "json" (first *command-line-args*))
+    (memory "json")
+    (memory "text")))
 
 (run)
