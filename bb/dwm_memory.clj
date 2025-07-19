@@ -5,9 +5,12 @@
             [cheshire.core :as json]))
 
 (defn get-hostname []
-  (-> (shell {:out :string} "hostname")
-      :out
-      clojure.string/trim))
+  (let [output (:out (shell {:out :string} "hostnamectl"))
+        ;; regex to capture the hostname after "Static hostname: "
+        hostname (re-find #"Static hostname:\s*(\S+)" output)]
+    (if hostname
+      (second hostname)
+      "unknown-hostname")))
 
 (defn determine-css-class [hostname used]
   (case hostname
