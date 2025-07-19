@@ -4,6 +4,12 @@
             [clojure.string :as str]
             [cheshire.core :as json]))
 
+
+; total memory [GiB] as reported by `free -h`
+(def host->memory {:ax-mac  7.7
+                   :ax-fuji 15.0})
+
+
 (defn get-hostname []
   (let [output (:out (shell {:out :string} "hostnamectl"))
         match (re-find #"Static hostname:\s*(\S+)" output)]
@@ -11,13 +17,15 @@
       (last match)
       "unknown-hostname")))
 
-(defn determine-css-class [hostname used]
-  (case hostname
-    "ax-mac"  (if (> used 6.0) :low :ok)
-    "ax-fuji" (if (> used 12.5) :low :ok)
-    (if (> used 6.0) :low :ok)))
+(defn determine-css-class 
+  "Determine the css class for waybar."
+  [hostname used]
+  (let [host-mem (get host->memory (keyword hostname))]
+    (if (nil? host-mem)
+      (if (> used 5.7) :low :ok)
+      (if (> used (- host-mem 2.0)) :low :ok))))
 
-(defn memory [output-fmt]
+(defn print-memory-info [output-fmt]
   (let [cmd "free -h | awk '/^Mem/ { print $3 \"/\" $2 }' | sed 's/i//g' | sed 's/G//'"
         mem (-> (shell {:out :string} "/bin/bash" "-c" cmd)
                 :out
@@ -32,7 +40,7 @@
 
 (defn run []
   (if (= "json" (first *command-line-args*))
-    (memory "json")
-    (memory "text")))
+    (print-memory-info "json")
+    (print-memory-info "text")))
 
 (run)
