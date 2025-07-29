@@ -20,7 +20,8 @@
      str/split-lines
      (map #(str/split % #"\s+"))
      (map (fn [[_ ifn _ ip & _rest]] [ifn (-> ip (str/split #"/") first)]))
-     (remove (fn [[ifn _ip]] (re-find #"lo|docker" ifn)))
+     #_(remove (fn [[ifn _ip]] (re-find #"lo|docker" ifn)))
+     (filter (fn [[ifn _ip]] (re-find #"enp1s0|wlan0|muc" ifn)))
      (map (fn [args] (str/join " " args)))
      (str/join ", ")
      println)
