@@ -22,6 +22,6 @@
      (map (fn [[_ ifn _ ip & _rest]] [ifn (-> ip (str/split #"/") first)]))
      #_(remove (fn [[ifn _ip]] (re-find #"lo|docker" ifn)))
      (filter (fn [[ifn _ip]] (re-find #"enp1s0|wlan0|muc" ifn)))
-     (map (fn [args] (str/join " " args)))
+     (map (fn [[ifn ip]] (format "%s [%s]" ip ifn)))
      (str/join ", ")
      println)
