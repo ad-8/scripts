@@ -7,9 +7,10 @@
 
 
 ; match e.g.: ["ProtonVPN DE#316" "DE#316"]
-(let [match (->> (shell {:out :string} "nmcli con show")
+(let [match (->> (shell {:out :string} "nmcli con show --active")
                  :out
-                 (re-find #"ProtonVPN (\w+#\d+)"))]
-  (if (some? match)
+                 (re-find #"ProtonVPN (\w+#\d+)|([A-Z]{2}-\d+)|muc")
+                 (filter some?))]
+  (if (and (some? match) (seq match))
     (println "" (last match))
     (println "NO VPN CONN")))
