@@ -39,14 +39,23 @@
   (let [lines (-> (sh ["rustup" "check"]) :out str/trim str/split-lines)]
     (if (every? #(str/includes? % "Up to date") lines)
       (printf "Rust:\n-\n")
-      (printf "Rust:\n%s\n" lines))))
+      (do (println "Rust:")
+          (doseq [line lines]
+            (println line))))))
 
 
-(print-updates)
-(println "\n---\n")
-(print-news)
-(println "\n---\n")
-(print-flatpak)
-(println "\n---\n")
-(print-rust)
+(defn- print-sep []
+  (println "\n---\n"))
 
+
+(defn main []
+  (print-updates)
+  (print-sep)
+  (print-news)
+  (print-sep)
+  (print-flatpak)
+  (print-sep)
+  (print-rust))
+
+
+(main)
