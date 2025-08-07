@@ -1,9 +1,18 @@
 #!/usr/bin/env bb
 
+; does only work when curr dir == script dir
+;(load-file "colors.clj")
+(defn script-dir []
+  (-> *file* java.io.File. .getParent))
+(defn load-relative [file]
+  (load-file (str (script-dir) "/" file)))
+(load-relative "colors.clj")
+
 (ns checkupdates
   (:require [clojure.string :as str]
             [clojure.pprint :refer [print-table]]
-            [babashka.process :refer [sh]]))
+            [babashka.process :refer [sh]]
+            [colors :as c]))
 
 
 (defn parse-line [line]
@@ -19,33 +28,38 @@
 (defn print-updates []
   (let [lines (-> (sh ["checkupdates"]) :out str/split-lines)]
     (if (= [""] lines)
-      (println "no updates")
-      (do (print-table (map parse-line lines))
-          (printf "\n\nupdates: %d\n" (count lines))))))
+      (println (c/green "no updates"))
+      (let [upds (count lines)
+            upds' (c/bold (c/on-red (format "\n\nupdates: %d" upds)))]
+        (print-table (map parse-line lines))
+        (println upds')))))
 
 
 (defn print-news []
   (let [res (-> (sh ["paru" "--show" "--news"]))]
     (if (= "" (:out res))
-      (println (str/trim (:err res)))
-      (println (str/trim (:out res))))))
+      (println (c/green (str/trim (:err res))))
+      (println (c/magenta (str/trim (:out res)))))))
 
 
 (defn print-flatpak []
   (let [out (-> (sh ["flatpak" "remote-ls" "--updates"]) :out str/trim)]
-    (printf "Flatpak:\n%s\n" (if (= "" out) "-" out))))
+    (println (if (= "" out)
+               (c/green "Flatpak: -")
+               (c/magenta out)))))
 
 (defn print-rust []
   (let [lines (-> (sh ["rustup" "check"]) :out str/trim str/split-lines)]
     (if (every? #(str/includes? % "Up to date") lines)
-      (printf "Rust:\n-\n")
-      (do (println "Rust:")
+      (printf (c/green "Rust: -\n"))
+      (do (println (c/bold (c/on-red "Rust:")))
           (doseq [line lines]
             (println line))))))
 
 
 (defn- print-sep []
-  (println "\n---\n"))
+  (let [line (apply str (repeat 25 "-"))]
+    (println (c/grey (format "\n%s\n" line)))))
 
 
 (defn main []
