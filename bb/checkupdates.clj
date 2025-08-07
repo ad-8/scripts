@@ -4,9 +4,9 @@
 ;(load-file "colors.clj")
 (defn script-dir []
   (-> *file* java.io.File. .getParent))
-(defn load-relative [file]
+(defn load-abs-path [file]
   (load-file (str (script-dir) "/" file)))
-(load-relative "colors.clj")
+(load-abs-path "colors.clj")
 
 (ns checkupdates
   (:require [clojure.string :as str]
