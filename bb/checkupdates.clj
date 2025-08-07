@@ -30,7 +30,7 @@
     (if (= [""] lines)
       (println (c/green "\n  no updates"))
       (let [upds (count lines)
-            upds' (c/bold (c/on-red (format "\n\nupdates: %d" upds)))]
+            upds' (c/bold (c/on-red (format "\nupdates: %d" upds)))]
         (print-table (map parse-line lines))
         (println upds')))))
 
