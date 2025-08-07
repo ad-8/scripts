@@ -28,7 +28,7 @@
 (defn print-updates []
   (let [lines (-> (sh ["checkupdates"]) :out str/split-lines)]
     (if (= [""] lines)
-      (println (c/green "no updates"))
+      (println (c/green "\n  no updates"))
       (let [upds (count lines)
             upds' (c/bold (c/on-red (format "\n\nupdates: %d" upds)))]
         (print-table (map parse-line lines))
@@ -38,20 +38,20 @@
 (defn print-news []
   (let [res (-> (sh ["paru" "--show" "--news"]))]
     (if (= "" (:out res))
-      (println (c/green (str/trim (:err res))))
+      (println (c/green "  " (str/trim (:err res))))
       (println (c/magenta (str/trim (:out res)))))))
 
 
 (defn print-flatpak []
   (let [out (-> (sh ["flatpak" "remote-ls" "--updates"]) :out str/trim)]
     (println (if (= "" out)
-               (c/green "Flatpak: -")
+               (c/green "  Flatpak")
                (c/magenta out)))))
 
 (defn print-rust []
   (let [lines (-> (sh ["rustup" "check"]) :out str/trim str/split-lines)]
     (if (every? #(str/includes? % "Up to date") lines)
-      (printf (c/green "Rust: -\n"))
+      (printf (c/green "  Rust\n"))
       (do (println (c/bold (c/on-red "Rust:")))
           (doseq [line lines]
             (println line))))))
