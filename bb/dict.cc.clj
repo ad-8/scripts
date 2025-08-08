@@ -99,7 +99,7 @@
 
 
 (defn translate [word]
-  (let [h {"User-Agent" "Mozilla/5.0 (Windows NT 6.1;) Gecko/20100101 Firefox/13.0.1"} ; LUL
+  (let [h {"User-Agent" "Mozilla/5.0 (Windows NT 6.1;) Gecko/20100101 Firefox/141.0.3"} ; LUL
         url (format "https://www.dict.cc/?s=%s" word)
         resp (http/get url {:headers h})
         sel (->> resp :body (utils/html->hickory)
