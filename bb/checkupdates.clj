@@ -11,7 +11,7 @@
 (ns checkupdates
   (:require [clojure.string :as str]
             [clojure.pprint :refer [print-table]]
-            [babashka.process :refer [sh]]
+            [babashka.process :refer [sh shell]]
             [colors :as c]))
 
 
@@ -30,7 +30,7 @@
     (if (= [""] lines)
       (println (c/green "\n  no updates"))
       (let [upds (count lines)
-            upds' (c/bold (c/on-red (format "\nupdates: %d" upds)))]
+            upds' (c/bold (c/on-red (format "\n updates: %d " upds)))]
         (print-table (map parse-line lines))
         (println upds')))))
 
@@ -71,5 +71,10 @@
   (print-sep)
   (print-rust))
 
+; could just use escape codes to clear and goto top left
+; (println "\u001b[2J\u001b[H")
 
+; shell: Interactive, streams output
+; sh: Captures output for processing
+(shell "clear")
 (main)
