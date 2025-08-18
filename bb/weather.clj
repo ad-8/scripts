@@ -153,13 +153,13 @@
         ;; {:exit 1, :out , :err Unknown option -3°C  Foggy  (LOCATION)
         ;; if the temp is negative and the whole string starts with -3°C, 
         ;; it is interpreted as a shell argument like -y and causes an error with notify-send
-        fmt-old (format "   %s°C  %s  (%s)\n\n%s\n\ntoday:     %s\ntomorrow:  %s\nday after: %s"
-                        curr-temp curr-desc (:short current-place)
+        fmt-old (format "   %s°C  %s\n\n%s\n\ntoday:     %s\ntomorrow:  %s\nday after: %s"
+                        curr-temp curr-desc
                         (sun-rise-set today today+1)
                         (fmt today)
                         (fmt today+1) (fmt today+2))
-        shell-txt (format "notify-send --app-name \"%s\" --icon \"%s\" Weather \"%s\""
-                          "dunst-weather" (:icon-path settings) fmt-old)]
+        shell-txt (format "notify-send --app-name \"%s\" --icon \"%s\" \"%s\" \"%s\""
+                          "dunst-weather" (:icon-path settings) (format "Weather in %s" (:long current-place)) fmt-old)]
 
     (download-icon curr-icon (:icon-path settings))
     (shell shell-txt)))
