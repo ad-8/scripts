@@ -7,7 +7,7 @@
 
 
 
-(def wallpaper-base (io/file (System/getProperty "user.home") "sync" "wallpapers" "wlgz"))
+(def wallpaper-base (io/file (System/getProperty "user.home") "sync" "wallpapers" "bing"))
 
 (comment
   (->> (shell/sh "ls" (str wallpaper-base))
@@ -17,7 +17,7 @@
 (def wallpaper-dir (io/file wallpaper-base))
 
 (defn set-wallpaper-xorg [path]
-  (let [feh (format "feh --bg-max \"%s\"" path)]
+  (let [feh (format "feh --bg-scale \"%s\"" path)]
     (shell/sh "sh" "-c" feh)
     (println "Wallpaper changed.")))
 
