@@ -23,7 +23,7 @@
 
 
 (defn set-wallpaper-wayland [path]
-  (let [feh (format "swaybg --image %s --mode fill" path)]
+  (let [feh (format "swaybg --image %s" path)]
     ;; by default, swaybg just "stacks" the wallpapers
     (try (shell "killall swaybg") (catch Exception e))
     (Thread/sleep 250)
