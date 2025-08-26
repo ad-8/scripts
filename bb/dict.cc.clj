@@ -92,7 +92,14 @@
 
 (defn partition->map [[left right]]
   (let [upvotes (-> right :div first)
-        upvotes' (if (nil? upvotes) 0 (Integer/parseInt upvotes))]
+        ; sometimes both :a tags are empty and the translation is in the :div tags
+        ; TODO would be to better parse beforehand, as stuff gets lost in those cases
+        ; (zusammengesetzte Wörter / Redewendungen)
+        upvotes' (try
+                   (Integer/parseInt upvotes)
+                   (catch Exception _e
+                     (println "error parsing" left "/" right)
+                     0))]
     {:x (->> left :a (str/join " "))
      :y (->> right :a (str/join " "))
      :upvotes upvotes'}))
