@@ -122,67 +122,30 @@
 
 
 (comment
+  (def h {"User-Agent" "Mozilla/5.0 (Windows NT 6.1;) Gecko/20100101 Firefox/141.0.3"})
 
-  (def f (future (Thread/sleep 3000) (println "done")))
-  (realized? f)
-
-  (def h {"User-Agent" "Mozilla/5.0 (Windows NT 6.1;) Gecko/20100101 Firefox/13.0.1"})
-
-  (def resp (http/get "https://www.dict.cc/?s=whimsical" {:headers h}))
   ;; h to include nouns before low upvoted others
-  (def resp (http/get "https://www.dict.cc/?s=dare" {:headers h}))
+  (def resp (http/get "https://www.dict.cc/?s=whimsical" {:headers h}))
 
 
+; :a   - überetztung, info like genus
+; :dfn - bereich like comp. 
+; :div - "like" counter
   (def selection
     (->> resp
          :body
          (utils/html->hickory)
          (s/select (s/and (s/tag "td") (s/class "td7nl")))
-        ; (map :content)
-         ))
+         (map :content)))
 
   (->> selection
-        (take 2)
-         (map extract-from-vec)
-         (partition 2)
-         (map partition->map)
-         (take 5)
-         (clojure.pprint/print-table))
-
-  (defn get-inner [elem]
-    (loop [current elem]
-      (let []
-        (cond
-          (string? current) current
-          (map? current) (recur (:content current))
-          (vector? current) (if (string? (first current))
-                              (first current)
-                              (recur (first current)))
-          :else :should-not-happen))))
-
-
-  (->> resp
-       :body
-       (utils/html->hickory)
-       (s/select (s/and (s/tag "td") (s/class "td7nl")))
-       (take 10)
-       (map :content)
-       second
-       (map get-inner))
-
-; selection is al Lazy seq of vect0rs (that have maps or strings inside) ( [{} ".."] [] )
-; :a   -   überetztung, info like genus
-; :dfn -  bereich like comp. 
-; div - "like" counter
-
-  (->> selection
-       (take 2)
        (map extract-from-vec)
        (partition 2)
-       (take 4)
        (map partition->map)
        (sort-by :upvotes >)
+       (take 5)
        (clojure.pprint/print-table))
+
 
   ;;
   )
