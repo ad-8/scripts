@@ -32,16 +32,26 @@
         contrast   (last (re-find  #"\bcurrent value =\s*(\d+)\b" cont))]
     (format "Brightness: %s\nContrast:   %s\n"  brightness contrast)))
 
+(defn get-session-type
+  "Returns the session type as string; should return either 'x11' or 'wayland'."
+  []
+  (-> (shell {:out :string} "/bin/bash -c" "echo $XDG_SESSION_TYPE") :out str/trim))
+
 (defn set-color-temp
   "Usage: sct [temperature]
    Temperatures must be in a range from 1000-10000
    If no arguments are passed sct resets the display to the default temperature (6500K)"
   [n]
-  (sh "sct" (str n)))
+  (if (= "x11" (get-session-type))
+    (sh "sct" (str n))
+    ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
+    (do (try (shell "killall gammastep")
+             (catch Exception _e (println "error killing gammastep")))
+        (shell "gammastep -O" (str n)))))
 
 
 
-(defn heading [s] 
+(defn heading [s]
   (let [line (apply str (repeat (count s) "-"))]
     (format "%s\n%s\n%s" line s line)))
 
@@ -72,7 +82,7 @@
                "ul2"  {:name "Ultra Low"
                        :vals [10 10 15 15 3000]}
                "ni"  {:name "night"
-                       :vals [2 2 15 15 3000]}
+                      :vals [2 2 15 15 3000]}
                "max"  {:name "Max"
                        :vals [100 0 100 100 6500]}
                "max-e" {:name "Max External"
@@ -111,18 +121,18 @@
 (defn ask-user
   "Lets the user choose a setting interactively via dmenu."
   []
-  (let [session-type (-> (shell {:out :string} "/bin/bash -c" "echo $XDG_SESSION_TYPE") :out str/trim)]
-        (if (= "wayland" session-type)
-          (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
-              (process {:out :string} "wmenu" "-i" "-l" "15" "-p" "licht"
-                       "-f" "HackNerdFont 15" "-N" (:polar1 nord) "-M" (:orange nord)
-                       "-m" (:snow3 nord) "-S" (:orange nord) "-s" (:snow3 nord))
-              deref :out str/trim clojure.edn/read-string first)
-          (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
-              (process {:out :string} "dmenu" "-i" "-l" "15" "-p" "licht"
-                       "-fn" "HackNerdFont-15" "-nb" (:polar1 nord) "-nf" (:snow3 nord)
-                       "-sb" (:orange nord) "-sf" (:snow3 nord))
-              deref :out str/trim clojure.edn/read-string first))))
+  (let [session-type (get-session-type)]
+    (if (= "wayland" session-type)
+      (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
+          (process {:out :string} "wmenu" "-i" "-l" "15" "-p" "licht"
+                   "-f" "HackNerdFont 15" "-N" (:polar1 nord) "-M" (:orange nord)
+                   "-m" (:snow3 nord) "-S" (:orange nord) "-s" (:snow3 nord))
+          deref :out str/trim clojure.edn/read-string first)
+      (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) settings)))
+          (process {:out :string} "dmenu" "-i" "-l" "15" "-p" "licht"
+                   "-fn" "HackNerdFont-15" "-nb" (:polar1 nord) "-nf" (:snow3 nord)
+                   "-sb" (:orange nord) "-sf" (:snow3 nord))
+          deref :out str/trim clojure.edn/read-string first))))
 
 
 (defn set-lights! [first-arg]
