@@ -46,9 +46,9 @@ echo "Extracting..."
 tar xzf "$TAR_FILE"
 
 # Install the binary
-echo "Installing bb to /usr/bin (sudo required)..."
-sudo mv bb /usr/bin/
-sudo chmod +x /usr/bin/bb
+echo "Installing bb to ~/.local/bin ..."
+mv bb $HOME/.local/bin/
+chmod +x $HOME/.local/bin/bb
 
 # Clean up
 rm "$TAR_FILE" "$SHA_FILE" "${SHA_FILE}.formatted"
