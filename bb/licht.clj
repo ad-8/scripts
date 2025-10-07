@@ -35,7 +35,7 @@
 (defn get-session-type
   "Returns the session type as string; should return either 'x11' or 'wayland'."
   []
-  (-> (shell {:out :string} "/bin/bash -c" "echo $XDG_SESSION_TYPE") :out str/trim))
+  (-> (shell {:out :string} "/usr/bin/env bash -c" "echo $XDG_SESSION_TYPE") :out str/trim))
 
 (defn set-color-temp
   "Usage: sct [temperature]
@@ -45,7 +45,7 @@
   (if (= "x11" (get-session-type))
     (sh "sct" (str n))
     ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
-    (do (try (shell "killall gammastep")
+    (do (try (shell "pkill -f gammastep")
              (catch Exception _e (println "error killing gammastep"))) 
         ;; starts a process asynchronously, `shell` used to block here:
         (babashka.process/process "gammastep -O" (str n)))))

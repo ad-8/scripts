@@ -6,11 +6,11 @@
 
 (def device-commands
   {"screen"   {:get "light"
-               :inc "/usr/bin/light -A 5"
-               :dec "/usr/bin/light -U 5"}
+               :inc "light -A 5"
+               :dec "light -U 5"}
    "keyboard" {:get "light -s sysfs/leds/smc::kbd_backlight"
-               :inc "/usr/bin/light -s sysfs/leds/smc::kbd_backlight -A 5"
-               :dec "/usr/bin/light -s sysfs/leds/smc::kbd_backlight -U 5"}})
+               :inc "light -s sysfs/leds/smc::kbd_backlight -A 5"
+               :dec "light -s sysfs/leds/smc::kbd_backlight -U 5"}})
 
 
 (defn get-brightness [device]
