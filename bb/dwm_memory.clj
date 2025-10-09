@@ -30,7 +30,8 @@
   (let [cmd "free -h | awk '/^Mem/ { print $3 \"/\" $2 }' | sed 's/i//g' | sed 's/G//'"
         mem (-> (shell {:out :string} "/bin/bash" "-c" cmd)
                 :out
-                str/trim)
+                str/trim
+                (str/replace "," "."))
         [used _total] (str/split mem #"/")
         class (determine-css-class (get-hostname) (Float/parseFloat used))
         fmt (format "󰍛 %s" mem)
