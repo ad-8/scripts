@@ -7,7 +7,8 @@
 
 ; total memory [GiB] as reported by `free -h`
 (def host->memory {:ax-mac  7.7
-                   :ax-fuji 15.0})
+                   :ax-fuji 15.0
+                   :ax-bee 27.0})
 
 
 (defn get-hostname []
@@ -17,7 +18,7 @@
       (last match)
       "unknown-hostname")))
 
-(defn determine-css-class 
+(defn determine-css-class
   "Determine the css class for waybar."
   [hostname used]
   (let [host-mem (get host->memory (keyword hostname))]
