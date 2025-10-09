@@ -28,7 +28,7 @@
 
 (defn print-memory-info [output-fmt]
   (let [cmd "free -h | awk '/^Mem/ { print $3 \"/\" $2 }' | sed 's/i//g' | sed 's/G//'"
-        mem (-> (shell {:out :string} "/bin/bash" "-c" cmd)
+        mem (-> (shell {:out :string} "/usr/bin/env bash -c" cmd)
                 :out
                 str/trim
                 (str/replace "," "."))
