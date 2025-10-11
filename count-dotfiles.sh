@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-echo "Total lines:\n---------"
+echo "Total lines:"
 fd . -u --type f \
   --exclude .git \
   --exclude alacritty \
