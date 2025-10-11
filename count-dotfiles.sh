@@ -3,7 +3,7 @@
 echo "Total lines:"
 fd . -u --type f \
   --exclude .git \
-  --exclude alacritty \
+  --exclude themes \
   --exclude emoji \
   --exclude font-awesome \
   ~/dotfiles/ \
@@ -12,7 +12,7 @@ fd . -u --type f \
 echo -e "\nTop 10 files by line count:"
 fd . -u --type f \
   --exclude .git \
-  --exclude alacritty \
+  --exclude themes \
   --exclude emoji \
   --exclude font-awesome \
   ~/dotfiles/ \
