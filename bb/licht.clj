@@ -86,18 +86,19 @@
                       :vals [2 2 15 15 3000]}
                "max"  {:name "Max"
                        :vals [100 0 100 100 6500]}
-               "max-e" {:name "Max-External"
-                        :vals [50 0 100 100 6500]}
+               ;; "max-e" {:name "Max-External"
+               ;;          :vals [50 0 100 100 6500]}
                "med" {:name "Medium"
                       :vals [50 50 50 50 4250]}
-               "kl"   {:name "Kino-Low"
-                       :vals [0 5 50 40 3333]}
-               "kl2"   {:name "Kino-Low-2"
-                        :vals [0 5 25 25 3333]}
-               "kh"   {:name "Kino-High"
-                       :vals [0 5 80 80 6000]}
-               "km"   {:name "Kino-Max"
-                       :vals [0 0 100 100 6500]}})
+               ;; "kl"   {:name "Kino-Low"
+               ;;         :vals [0 5 50 40 3333]}
+               ;; "kl2"   {:name "Kino-Low-2"
+               ;;          :vals [0 5 25 25 3333]}
+               ;; "kh"   {:name "Kino-High"
+               ;;         :vals [0 5 80 80 6000]}
+               ;; "km"   {:name "Kino-Max"
+               ;;         :vals [0 0 100 100 6500]}
+               })
 
 
 (def nord
