@@ -14,7 +14,7 @@
                    (re-find #"ProtonVPN (\w+#\d+)|([A-Z]{2}-\d+)|muc")
                    (filter some?))]
   (if (and (some? match) (seq match))
-    (json/encode {:text (str "" (last match))})
+    (json/encode {:text (str " " (last match))})
     (json/encode {:text "NO VPN CONN" :state "Critical" :class "down"}))))
 
 (println (run))
