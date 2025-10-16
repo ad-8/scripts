@@ -4,17 +4,6 @@
             [clojure.string :as str]))
 
 
-;; ruby version
-;; res = `ip -o -4 addr show | awk '{print $2, $4}' | cut -d/ -f1`
-
-;; ips = res.lines
-;;     .reject { |line| line.match /^(lo|docker)/ }
-;;     .map { |line| line.strip }
-
-;; foo = ips.join(", ")
-;; puts foo
-
-
 (->> (shell {:out :string} "ip -o -4 addr show")
      :out
      str/split-lines
