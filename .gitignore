@@ -16,3 +16,4 @@ pom.xml.asc
 .lsp/
 .calva/
 bb/weather.edn
+unused/scratchpad.clj
