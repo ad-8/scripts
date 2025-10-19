@@ -4,7 +4,7 @@
             [babashka.process :refer [shell]]))
 
 
-(def device-commands
+(def device->commands
   {"screen"   {:get "light"
                :inc "light -A 5"
                :dec "light -U 5"}
@@ -14,16 +14,16 @@
 
 
 (defn get-brightness [device]
-  (-> (shell {:out :string} (get-in device-commands [device :get]))
+  (-> (shell {:out :string} (get-in device->commands [device :get]))
       :out str/trim Double/parseDouble Math/round int))
 
 
 (defn inc-brightness [device]
-  (shell (get-in device-commands [device :inc])))
+  (shell (get-in device->commands [device :inc])))
 
 
 (defn dec-brightness [device]
-  (shell (get-in device-commands [device :dec])))
+  (shell (get-in device->commands [device :dec])))
 
 
 (defn ntfy [device]
