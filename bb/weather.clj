@@ -14,8 +14,8 @@
 
 
 
-(def settings-file (io/file (System/getProperty "user.home") "my" "cfg" "weather.edn"))
-(def weather-codes-file (io/file (System/getProperty "user.home") "my" "cfg" "weather-codes.json"))
+(def settings-file (io/file (System/getProperty "user.home") "sync" "cfg" "weather.edn"))
+(def weather-codes-file (io/file (System/getProperty "user.home") "sync" "cfg" "weather-codes.json"))
 (def weather-codes (-> weather-codes-file slurp json/decode clojure.walk/keywordize-keys))
 
 
