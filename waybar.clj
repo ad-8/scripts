@@ -93,10 +93,24 @@
 
 
 
+(defn- stdout! [cmd]
+  (-> (shell {:out :string} cmd) :out str/trim))
 
+(defn- print-curr-playing []
+  (let [status (stdout! "playerctl status")
+        track-number (stdout! "playerctl metadata xesam:trackNumber")
+        title (stdout! "playerctl metadata xesam:title")
+        out-str (format "%s. %s" track-number title)]
+    (if (= "Playing" status)
+      (printf "%s" out-str)
+      (printf "PAUSED %s" out-str))))
 
 (defn waybar-music []
-  (printf "TODO music"))
+  (let [metadata (stdout! "playerctl metadata")
+        first-line (-> metadata str/split-lines first)]
+    (if-not (or (str/starts-with? first-line "strawberry") (str/starts-with? first-line "fooyin"))
+      (printf "error-unsupported-player")
+      (print-curr-playing))))
 
 (defn waybar-toggle []
   (printf "TODO toggle"))
