@@ -35,15 +35,77 @@
     (printf " %s" load-one-min)))
 
 
-(comment
 
+; total memory [GiB] as reported by `free -h`
+(def host->memory {:ax-mac  7.7
+                   :ax-fuji 15.0
+                   :ax-bee 27.0})
+
+(defn- get-hostname []
+  (let [output (:out (shell {:out :string} "hostnamectl"))
+        match (re-find #"Static hostname:\s*(\S+)" output)]
+    (if match
+      (last match)
+      "unknown-hostname")))
+
+(defn- determine-css-class
+  "Determine the css class for waybar."
+  [hostname used]
+  (let [host-mem (get host->memory (keyword hostname))]
+    (if (nil? host-mem)
+      (if (> used 5.7) :low :ok)
+      (if (> used (- host-mem 2.0)) :low :ok))))
+
+;; TODO filter in clj like in rust
+(defn- print-memory-info [output-fmt]
+  (let [cmd "free -h | awk '/^Mem/ { print $3 \"/\" $2 }' | sed 's/i//g' | sed 's/G//'"
+        mem (-> (shell {:out :string} "/usr/bin/env bash -c" cmd)
+                :out
+                str/trim
+                (str/replace "," "."))
+        [used _total] (str/split mem #"/")
+        class (determine-css-class (get-hostname) (Float/parseFloat used))
+        fmt (format "󰍛 %s" mem)
+        json (json/encode {:text fmt :class class})]
+    (if (= "json" output-fmt)
+      (println json)
+      (println fmt))))
+
+(defn waybar-memory []
+  (print-memory-info "json"))
+
+
+
+
+
+(defn waybar-music []
+  (printf "TODO music"))
+
+(defn waybar-toggle []
+  (printf "TODO toggle"))
+
+(defn waybar-vpn []
+  (printf "TODO vpn"))
+
+(defn waybar-notification-status []
+  (let [is-paused (-> (shell {:out :string} "dunstctl is-paused")
+                      :out
+                      str/trim
+                      Boolean/parseBoolean)]
+    (if is-paused
+      (printf " ")
+      (printf " "))))
+
+
+(comment
   ;; no can do
   (slurp "/proc/loadavg")
       
 
-  (-> (shell {:out :string} "sh -c 'cat /proc/loadavg'")
+  (-> (shell {:out :string} "dunstctl is-paused")
       :out
-      str/trim)
+      str/trim
+      Boolean/parseBoolean)
 
   ;;
   )
@@ -55,4 +117,9 @@
     "disk" (waybar-disk)
     "licht" (waybar-licht)
     "load" (waybar-load)
+    "memory" (waybar-memory)
+    "music" (waybar-music)
+    "notification-status" (waybar-notification-status)
+    "toggle" (waybar-toggle)
+    "vpn" (waybar-vpn)
     (default)))
