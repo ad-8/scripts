@@ -84,8 +84,18 @@
 (defn waybar-toggle []
   (printf "TODO toggle"))
 
+
+; match e.g.: ["ProtonVPN DE#316" "DE#316"]
 (defn waybar-vpn []
-  (printf "TODO vpn"))
+  (let [match (->> (shell {:out :string} "nmcli con show --active")
+                   :out
+                   (re-find #"ProtonVPN (\w+#\d+)|([A-Z]{2}-\d+)|muc")
+                   (filter some?))
+        out-str (if (and (some? match) (seq match))
+          (json/encode {:text (str " " (last match))})
+          (json/encode {:text "NO VPN CONN" :state "Critical" :class "down"}))]
+    (printf "%s" out-str)))
+
 
 (defn waybar-notification-status []
   (let [is-paused (-> (shell {:out :string} "dunstctl is-paused")
