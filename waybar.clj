@@ -112,9 +112,25 @@
       (printf "error-unsupported-player")
       (print-curr-playing))))
 
-(defn waybar-toggle []
-  (printf "TODO toggle"))
+(defn waybar-toggle [minimal]
+  ;; `:continue true` prevents the exception on non-zero exit codes.
+  (let [status (-> (shell {:out :string :continue true} "sh -c 'pgrep waybar >/dev/null'") :exit)]
+    (if (= 0 status)
+      (do (println "waybar is running -> killing it")
+          (let [status (-> (shell {:out :string} "sh -c 'pkill -f waybar'") :exit)]
+            (printf "killing waybar, status = %d\n" status)))
+      (do (println "not runnin'")
+          (if minimal
+            (let [status (-> (shell {:out :string} "sh -c 'setsid waybar -c ~/.config/waybar/config-minimal -s ~/.config/waybar/style-minimal.css >/dev/null 2>&1 &'") :exit)]
+              (printf "killing waybar, status = %d\n" status))
+            (let [status (-> (shell {:out :string} "sh -c 'setsid waybar >/dev/null 2>&1 &'") :exit)]
+              (printf "killing waybar, status = %d\n" status)))))))
 
+(comment
+  (-> (shell {:out :string :continue true} "sh -c 'pgrep waybar >/dev/null'")
+                   :exit)
+  ;; 
+  )
 
 ; match e.g.: ["ProtonVPN DE#316" "DE#316"]
 (defn waybar-vpn []
@@ -138,20 +154,6 @@
       (printf " "))))
 
 
-(comment
-  ;; no can do
-  (slurp "/proc/loadavg")
-      
-
-  (-> (shell {:out :string} "dunstctl is-paused")
-      :out
-      str/trim
-      Boolean/parseBoolean)
-
-  ;;
-  )
-
-
 (let [action (first *command-line-args*)]
   (case action
     "date" (waybar-date)
@@ -161,6 +163,7 @@
     "memory" (waybar-memory)
     "music" (waybar-music)
     "notification-status" (waybar-notification-status)
-    "toggle" (waybar-toggle)
+    "toggle" (waybar-toggle false)
+    "toggle-min" (waybar-toggle true)
     "vpn" (waybar-vpn)
     (default)))
