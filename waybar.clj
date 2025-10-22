@@ -20,10 +20,28 @@
             str/trim)]
     (println date-str)))
 
+(defn waybar-disk []
+  (println "TODO disk"))
+
+(defn waybar-licht []
+  (let [licht-val (slurp "/tmp/licht-curr-val")]
+    (printf " %s" licht-val)))
+
+(defn waybar-load []
+  (let [loadavg (-> (shell {:out :string} "sh -c 'cat /proc/loadavg'")
+                    :out
+                    str/trim)
+        load-one-min (-> loadavg (str/split #"\s") first)]
+    (printf " %s" load-one-min)))
+
 
 (comment
 
-  (-> (shell {:out :string} "date '+%a %d.%m.'")
+  ;; no can do
+  (slurp "/proc/loadavg")
+      
+
+  (-> (shell {:out :string} "sh -c 'cat /proc/loadavg'")
       :out
       str/trim)
 
@@ -34,4 +52,7 @@
 (let [action (first *command-line-args*)]
   (case action
     "date" (waybar-date)
+    "disk" (waybar-disk)
+    "licht" (waybar-licht)
+    "load" (waybar-load)
     (default)))
