@@ -12,29 +12,64 @@
   (-> (shell {:out :string} cmd) :out str/trim))
 
 (defn- status! [cmd]
-  (-> (shell {:out :string :continue true} "sh -c" cmd) :exit ))
+  (-> (shell {:out :string :continue true} "sh -c" cmd) :exit))
 
 
-
-(defn volume-up []
+(defn- volume-up []
   (println "volume +")
   (let [status0 (status! "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0")
         status1 (status! "wpctl set-volume -l 2.0 @DEFAULT_AUDIO_SINK@ 5%+")]
-    (println "s0 and s1:" status0, status1)))
+    (println "exit codes:" status0, status1)))
 
-
-(defn volume-down []
+(defn- volume-down []
   (println "volume -")
   (let [status0 (status! "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0")
         status1 (status! "wpctl set-volume -l 2.0 @DEFAULT_AUDIO_SINK@ 5%-")]
-    (println "s0 and s1:" status0, status1)))
+    (println "exit codes:" status0, status1)))
 
-(defn volume-mute []
+(defn- volume-mute []
   (println "volume MUTE")
   (let [status0 (status! "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")]
-    (println "s0:" status0)))
+    (println "exit code:" status0)))
 
-(defn volume [action]
+(defn- current-volume
+  "Returns the current volume as an Integer between *0-100* (...), 
+   as well as the stdout of the `wpctl` command."
+  []
+  (let [vol-str (stdout! "wpctl get-volume @DEFAULT_AUDIO_SINK@") ; Volume: 0.42 
+        vol-digits (->> vol-str
+                        (filter #(Character/isDigit %))
+                        (apply str))
+        vol (-> (str/replace vol-digits #"^0{1,2}" "") Integer/parseInt)]
+    [vol vol-str]))
+
+(defn- volume-send-notification
+  "Sends a volume notification using dunstify."
+  [volume muted?]
+  (let [icon (cond
+               muted? "muted"
+               (< volume 33) "low"
+               (< volume 66) "medium"
+               :else "high")
+        text (if muted?
+               "Currently muted"
+               (str "Currently at " volume "%"))]
+    (shell "dunstify"
+           "-a" "Volume"
+           "-r" "9993"
+           "-h" (str "int:value:" volume)
+           "-i" (str "audio-volume-" icon)
+           "Volume.clj"
+           text
+           "-t" "2000"
+           "-u" "low")))
+
+(defn volume
+  "Increment, decrement, or mute the volume using Pipewire and send a notification.
+   
+   Original script by `https://github.com/ericmurphyxyz/dotfiles`
+   as first seen on `https://www.youtube.com/watch?v=XWlbaERuDP4`."
+  [action]
   (println "action = " action)
 
   ;; set volume
@@ -43,9 +78,13 @@
     :down (volume-down)
     :mute (volume-mute))
 
-  ;; send notification
-
-  )
+  ;; determine new volume && send notification
+  (let [[vol vol-str] (current-volume)]
+    (case action
+      :mute (if (str/includes? vol-str "MUTED")
+              (volume-send-notification vol true)
+              (volume-send-notification vol false))
+      (volume-send-notification vol false))))
 
 
 (let [action (first *command-line-args*)]
