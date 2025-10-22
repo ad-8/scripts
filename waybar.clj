@@ -20,8 +20,25 @@
             str/trim)]
     (println date-str)))
 
+
+(defn- print-free-space [output-fmt]
+  (let [free-space-on-root (->> (shell {:out :string} "df -h / --output=avail")
+                                :out
+                                str/split-lines
+                                last
+                                str/trim)
+        fmt (format "󰋊 %s" free-space-on-root)
+        free-space-int (Integer/parseInt (re-find #"\d+" free-space-on-root))
+        class (if (< free-space-int 25) :low :ok)
+        json (json/encode {:text fmt :class class})]
+
+    (if (= "json" output-fmt)
+      (println json)
+      (println fmt))))
+
 (defn waybar-disk []
-  (println "TODO disk"))
+  (print-free-space "json"))
+
 
 (defn waybar-licht []
   (let [licht-val (slurp "/tmp/licht-curr-val")]
