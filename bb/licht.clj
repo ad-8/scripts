@@ -76,6 +76,8 @@
                        :vals [80 0 80 80 6000]}
                "hi2"  {:name "High2"
                        :vals [67 67 67 67 6000]}
+               "hi3"  {:name "High3"
+                       :vals [59 59 59 59 4900]}
                "lo"   {:name "Low"
                        :vals [23 25 40 33 3750]}
                "ul1"  {:name "Ultra-Low-1"
