@@ -102,7 +102,7 @@
   (let [metadata (stdout! "playerctl metadata")
         first-line (-> metadata str/split-lines first)]
     (if-not (or (str/starts-with? first-line "strawberry") (str/starts-with? first-line "fooyin"))
-      (printf "error-unsupported-player")
+      (printf "err-un-pl")
       (print-curr-playing))))
 
 (defn waybar-toggle [minimal]
