@@ -98,12 +98,17 @@
       (printf "%s" out-str)
       (printf "PAUSED %s" out-str))))
 
+(def supported-players ["strawberry" "fooyin" "emms"])
+
+(defn supported-player? [metadata] 
+  (let [line (-> metadata str/split-lines first)]
+    (some #(str/starts-with? line %) supported-players)))
+
 (defn waybar-music []
-  (let [metadata (stdout! "playerctl metadata")
-        first-line (-> metadata str/split-lines first)]
-    (if-not (or (str/starts-with? first-line "strawberry") (str/starts-with? first-line "fooyin"))
-      (printf "err-un-pl")
-      (print-curr-playing))))
+  (let [metadata (stdout! "playerctl metadata")]
+    (if (supported-player? metadata)
+      (print-curr-playing)
+      (printf "err-usp"))))
 
 (defn waybar-toggle [minimal]
   ;; `:continue true` prevents the exception on non-zero exit codes.
