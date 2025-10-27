@@ -94,9 +94,11 @@
         track-number (stdout! "playerctl metadata xesam:trackNumber")
         title (stdout! "playerctl metadata xesam:title")
         out-str (format "%s. %s" track-number title)]
-    (if (= "Playing" status)
-      (printf "%s" out-str)
-      (printf "PAUSED %s" out-str))))
+    (case status
+      "Playing" (printf "%s" out-str)
+      "Paused" (printf "PAUSED %s" out-str)
+      "Stopped" (printf "") ;; does not show up on waybar
+      (println "TODO: default case"))))
 
 (def supported-players ["strawberry" "fooyin" "emms"])
 
