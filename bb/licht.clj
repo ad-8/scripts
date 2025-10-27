@@ -86,6 +86,8 @@
                        :vals [10 10 15 15 3000]}
                "ni"  {:name "night"
                       :vals [2 2 15 15 3000]}
+               "ni2"  {:name "night"
+                      :vals [2 2 8 8 3000]}
                "max"  {:name "Max"
                        :vals [100 0 100 100 6500]}
                ;; "max-e" {:name "Max-External"
