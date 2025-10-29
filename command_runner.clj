@@ -8,6 +8,12 @@
 
 (deps/add-deps '{:deps {clj-commons/clj-yaml {:mvn/version "1.0.29"}}})
 
+'({:category "Help", :commands ({:name "help - about R", :cmd "echo 'This is R, a simple command runner.'"})}
+  {:category "System",
+   :commands
+   ({:name "Check disk usage", :cmd "df -h / && echo && df -h | grep -i nas"}
+    {:name "toggle notifications (dunst)", :cmd "$HOME/scripts/dunst_toggle_and_notify.clj"})}
+  {:etc :pp})
 (def commands-data (yaml/parse-string (slurp "/home/ax/x/commands.yml")))
 
 (defn flatten-commands [commands-data]
@@ -16,16 +22,18 @@
                  (get category-data :commands [])))
           commands-data))
 
+
+'({:name "help - about R", :cmd "echo 'This is R, a simple command runner.'", :category "Help"}
+  {:name "Check disk usage", :cmd "df -h / && echo && df -h | grep -i nas", :category "System"}
+  {:name "toggle notifications (dunst)", :cmd "$HOME/scripts/dunst_toggle_and_notify.clj", :category "System"}
+  {:and :more})
 (def all-commands
   (flatten-commands commands-data))
 
-
-;; (println "all:")
-;; (clojure.pprint/pprint commands-data)
-;; (println "flat:")
-;; (clojure.pprint/pprint all-commands)
-
-
+'("Wttr: Show loss"
+  "Wttr: Show data"
+  "Wttr: Plot"
+  "...")
 (def command-names
   (->> all-commands
        (sort-by (juxt (comp str/lower-case :category)
@@ -38,9 +46,11 @@
        (catch Exception e ((println "No command selected" (.getMessage e))
                            (System/exit 0)))))
 
+'"help - about R"
 (def actual-command-name
   (str/trim (second (str/split (user-select) #": " 2))))
 
+'#ordered/map ([:name help - about R] [:cmd echo 'This is R, a simple command runner.'] [:category Help])
 (def selected-command
   (first (filter #(= (:name %) actual-command-name) all-commands)))
 
