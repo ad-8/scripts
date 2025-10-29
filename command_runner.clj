@@ -29,16 +29,17 @@
 (def command-names
   (->> all-commands
        (sort-by (juxt (comp str/lower-case :category)
-                     (comp str/lower-case :name)))
+                      (comp str/lower-case :name)))
        reverse
        (map #(str (:category %) ": " (:name %)))))
 
-
-(def selected-name
-  (str/trim (:out (shell {:in (str/join "\n" command-names) :out :string} "fzf"))))
+(defn user-select []
+  (try (str/trim (:out (shell {:in (str/join "\n" command-names) :out :string} "fzf")))
+       (catch Exception e ((println "No command selected" (.getMessage e))
+                           (System/exit 0)))))
 
 (def actual-command-name
-  (str/trim (second (str/split selected-name #": " 2))))
+  (str/trim (second (str/split (user-select) #": " 2))))
 
 (def selected-command
   (first (filter #(= (:name %) actual-command-name) all-commands)))
