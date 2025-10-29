@@ -18,13 +18,13 @@
 (defn- volume-up []
   (println "volume +")
   (let [status0 (status! "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0")
-        status1 (status! "wpctl set-volume -l 2.0 @DEFAULT_AUDIO_SINK@ 5%+")]
+        status1 (status! "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+")]
     (println "exit codes:" status0, status1)))
 
 (defn- volume-down []
   (println "volume -")
   (let [status0 (status! "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0")
-        status1 (status! "wpctl set-volume -l 2.0 @DEFAULT_AUDIO_SINK@ 5%-")]
+        status1 (status! "wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%-")]
     (println "exit codes:" status0, status1)))
 
 (defn- volume-mute []
