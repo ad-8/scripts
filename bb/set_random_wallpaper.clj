@@ -1,4 +1,4 @@
-#!/usr/bin/bb
+#!/usr/bin/env bb
 (ns set-random-wallpaper
   (:require [clojure.java.io :as io]
             [clojure.java.shell :as shell]
@@ -25,7 +25,7 @@
 (defn set-wallpaper-wayland [path]
   (let [feh (format "swaybg --image \"%s\"" path)]
     ;; by default, swaybg just "stacks" the wallpapers
-    (try (shell "killall swaybg") (catch Exception e))
+    (try (shell "pkill -f swaybg") (catch Exception e))
     (Thread/sleep 250)
     (shell/sh "sh" "-c" feh)
     (println "Wallpaper changed.")))
@@ -53,7 +53,7 @@
 
 
 (defn get-session-type []
-  (-> (shell {:out :string} "/bin/bash -c" "echo $XDG_SESSION_TYPE") :out str/trim))
+  (-> (shell {:out :string} "/usr/bin/env bash -c" "echo $XDG_SESSION_TYPE") :out str/trim))
 
 
 (defn set-wall [path]
