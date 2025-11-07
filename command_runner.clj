@@ -2,9 +2,9 @@
 (ns command-runner
   (:require [babashka.deps :as deps]
             [babashka.process :refer [shell]]
+            [bling.core :refer [bling print-bling callout point-of-interest]]
             [clojure.string :as str]
             [clj-yaml.core :as yaml]))
-(deps/add-deps '{:deps {clj-commons/clj-yaml {:mvn/version "1.0.29"}}})
 
 
 (defn flatten-commands [commands-data]
@@ -63,6 +63,7 @@
   (first (filter #(= (:name %) actual-command-name) all-commands)))
 
 
-(let [msg (str "Executing command:" (:name selected-command) "from category:" (:category selected-command))]
-  (println msg)
+(let [cmd-info (callout {:type :info :theme :sideline :label-theme :marquee}
+                        (str "Executing command: " (bling [:green (:cmd selected-command)])))]
+  (print-bling cmd-info)
   (shell "sh" "-c" (:cmd selected-command)))
