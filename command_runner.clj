@@ -14,6 +14,7 @@
           commands-data))
 
 
+;;  ((juxt a b c) x) => [(a x) (b x) (c x)]
 (defn extract-cmd-names [all-commands]
   (->> all-commands
        (sort-by (juxt (comp str/lower-case :category)
