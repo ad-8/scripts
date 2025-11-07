@@ -22,7 +22,9 @@
        (map #(str (:category %) ": " (:name %)))))
 
 
-(defn user-select [command-names]
+(defn get-user-selection
+  "Uses `fzf` to present a list of commands to the user and return the users choice."
+  [command-names]
   (try (str/trim (:out (shell {:in (str/join "\n" command-names) :out :string} "fzf")))
        (catch Exception e ((println "No command selected" (.getMessage e))
                            (System/exit 0)))))
@@ -45,25 +47,13 @@
   (flatten-commands commands-data))
 
 
-'("Wttr: Show loss"
-  "Wttr: Show data"
-  "Wttr: Plot"
-  "...")
-(def command-names
-  (extract-cmd-names all-commands))
-
-
-'"help - about R"
-(def actual-command-name
-  (str/trim (second (str/split (user-select command-names) #": " 2))))
-
-
-'#ordered/map ([:name help - about R] [:cmd echo 'This is R, a simple command runner.'] [:category Help])
-(def selected-command
-  (first (filter #(= (:name %) actual-command-name) all-commands)))
-
-
-(let [cmd-info (callout {:type :info :theme :sideline :label-theme :marquee :label "command-runner"}
+(let [; ("Wttr: Show loss" "Wttr: Show data" "Wttr: Plot" "...")
+      command-names (extract-cmd-names all-commands) 
+      ; "help - about R"
+      actual-command-name (str/trim (second (str/split (get-user-selection command-names) #": " 2))) 
+      ; #ordered/map ([:name help - about R] [:cmd echo 'This is R, a simple command runner.'] [:category Help])
+      selected-command (first (filter #(= (:name %) actual-command-name) all-commands))
+      cmd-info (callout {:type :info :theme :sideline :label-theme :marquee :label "command-runner"}
                         (str "running: " (bling [:green (:cmd selected-command)])))]
   (print-bling cmd-info)
   (shell "sh" "-c" (:cmd selected-command)))
