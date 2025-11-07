@@ -55,6 +55,7 @@
       ; #ordered/map ([:name help - about R] [:cmd echo 'This is R, a simple command runner.'] [:category Help])
       selected-command (first (filter #(= (:name %) actual-command-name) all-commands))
       cmd-info (callout {:type :info :theme :sideline :label-theme :marquee :label "command-runner"}
-                        (str "running: " (bling [:green (:cmd selected-command)])))]
+                        (str "running " (bling [:olive (:name selected-command)]) "\n"
+                             "cmd     " (bling [:olive.bold (:cmd selected-command)])))]
   (print-bling cmd-info)
   (shell "sh" "-c" (:cmd selected-command)))
