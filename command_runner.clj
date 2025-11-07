@@ -63,7 +63,7 @@
   (first (filter #(= (:name %) actual-command-name) all-commands)))
 
 
-(let [cmd-info (callout {:type :info :theme :sideline :label-theme :marquee}
+(let [cmd-info (callout {:type :info :theme :sideline :label-theme :marquee :label "command-runner"}
                         (str "Running command: " (bling [:green (:cmd selected-command)])))]
   (print-bling cmd-info)
   (shell "sh" "-c" (:cmd selected-command)))
