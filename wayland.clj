@@ -5,7 +5,7 @@
             [cheshire.core :as json]))
 
 
-(defn default []
+(defn err-unknow-action []
   (println "error-unknown-action"))
 
 (defn- stdout! [cmd]
@@ -92,4 +92,4 @@
     "volume-up" (volume :up)
     "volume-down" (volume :down)
     "volume-mute" (volume :mute)
-    (default)))
+    (err-unknow-action)))

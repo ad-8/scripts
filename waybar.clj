@@ -4,7 +4,7 @@
             [babashka.process :refer [shell]]
             [cheshire.core :as json]))
 
-(defn default []
+(defn err-unknow-action []
   (println "error-unknown-action"))
 
 (defn waybar-date []
@@ -161,4 +161,4 @@
     "toggle" (waybar-toggle false)
     "toggle-min" (waybar-toggle true)
     "vpn" (waybar-vpn)
-    (default)))
+    (err-unknow-action)))
