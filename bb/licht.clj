@@ -20,10 +20,19 @@
   (-> (sh "light" "-s" "sysfs/leds/smc::kbd_backlight" "-G") :out (str/trim)))
 
 (defn set-ext-brightness [val]
-  (sh "ddcutil" "setvcp" "10" (str val)))
+  (let [set-display1 (format "ddcutil --display 1 setvcp 10 %s" val)
+        set-display2 (format "ddcutil --display 2 setvcp 10 %s" (+ val 10))]
+    (shell set-display1)
+    (shell "sleep 2")
+    (shell set-display2)))
 
 (defn set-ext-contrast [val]
-  (sh "ddcutil" "setvcp" "12" (str val)))
+  (let [set-display1 (format "ddcutil --display 1 setvcp 12 %s" val)
+        set-display2 (format "ddcutil --display 2 setvcp 12 %s" (+ val 10))]
+    (shell set-display1)
+    (shell "sleep 2")
+    (shell set-display2)))
+
 
 (defn get-ext-vals []
   (let [brigh (-> (sh "ddcutil" "getvcp" "10") :out)
