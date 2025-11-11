@@ -28,7 +28,7 @@
 
 (defn set-ext-contrast [val]
   (let [set-display1 (format "ddcutil --display 1 setvcp 12 %s" val)
-        set-display2 (format "ddcutil --display 2 setvcp 12 %s" (+ val 10))]
+        set-display2 (format "ddcutil --display 2 setvcp 12 %s" (+ val 25))]
     (shell set-display1)
     (shell "sleep 2")
     (shell set-display2)))
