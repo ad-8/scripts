@@ -145,6 +145,7 @@
         curr-temp (-> curr :temperature_2m format-number)
         day? (if (= 0 (:is_day curr)) false true)
         curr-desc (code-desc (:weather_code curr) day?)
+        prec-prob (-> curr :precipitation_probability)
         curr-icon (code-img (:weather_code curr) day?)
         daily-data (:daily data)
         today   (parse-day daily-data 0)
@@ -153,8 +154,8 @@
         ;; {:exit 1, :out , :err Unknown option -3°C  Foggy  (LOCATION)
         ;; if the temp is negative and the whole string starts with -3°C, 
         ;; it is interpreted as a shell argument like -y and causes an error with notify-send
-        fmt-old (format "   %s°C  %s\n\n%s\n\ntoday:     %s\ntomorrow:  %s\nday after: %s"
-                        curr-temp curr-desc
+        fmt-old (format "   %s°C  %s  --  %s%% PoP\n\n%s\n\ntoday:     %s\ntomorrow:  %s\nday after: %s"
+                        curr-temp curr-desc prec-prob
                         (sun-rise-set today today+1)
                         (fmt today)
                         (fmt today+1) (fmt today+2))
@@ -205,7 +206,9 @@
   data
   (keys data)
   (get data :daily)
+  (sort (get data :daily_units))
   (:current data)
+  (:current_units data)
 
   (try (forecast data)
        (catch Exception e (str "error: " (.getMessage e))))
