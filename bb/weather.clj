@@ -200,6 +200,8 @@
                    :style (str "width:" div-width "px;height:" div-height "px;")}]
             [:script (h/raw "const plotData = " (json/encode plot-data) ";"
                             "Plotly.newPlot('plotly-div', plotData.data, plotData.layout);")]]]))
+
+
 (defn plot-next-3-days [data]
   ;; https://plotly.com/javascript/multiple-axes/
   (let [outmap {:time (-> data :hourly :time)
@@ -221,17 +223,23 @@
               :yaxis "y2"
               :type "bar"
               :marker {:color :blue}
-;     :mode "lines"
-;     :text (:time outmap)
               :name "Niederschlag"}
+        precprob {:x (:time outmap)
+              :y (:prec_prob outmap)
+              :yaxis "y3"
+              :type "scatter"
+              :mode "lines"
+              :marker {:color :blue}
+              :name "Niederschlagswahrsch."}
         width 1600
         height 700
-        plot-data {:data [temp prec]
+        plot-data {:data [temp prec precprob]
                    :layout {:title {:text "Wetterplot"}
                             :width width
                             :height height
                             :xaxis {;:title {:text "DateTime"} 
                                     :type "date"
+                                   :domain [0.1 0.9]
                                    ; :tickformat "%a %d.%m"
                                     }
 ;                            :dtick (* 3 60 60 1000)
@@ -240,10 +248,16 @@
                                     }
                             :yaxis2 {:title {:text "Niederschlag [mm]"}
                                      :overlaying "y"
-                                     :side "right"
-                                     ;;  :linecolor "#2ca02c"
-                                   ;  :color :green
-                                     :range [0 (inc (apply max (:prec outmap)))]}  ; Adjust to your max precip
+                                     :side :right
+                                     :anchor :x
+                                     :range [0 (inc (apply max (:prec outmap)))]} 
+                            :yaxis3 {:title {:text "Niederschlagswahrsch."}
+                                     :overlaying "y"
+                                     :side :right
+                                     :anchor :free
+                                     ; TODO (someday (tm)) fucking position does not work
+                                     :positon 0.85
+                                     :range [0 100]}
                             }}
         filename "/tmp/plotly-weather-chart.html"
         html-template (html-template width height plot-data)]
@@ -252,8 +266,8 @@
 
     (spit filename html-template)
     (println "Plot saved to" filename ", opening in Firefox...")
-    (shell {:out :inherit} (format "firefox %s" filename)))
-  )
+    (shell {:out :inherit} (format "firefox %s" filename))))
+
 
 (let [action (first *command-line-args*)
       resp (make-request url query-params)
