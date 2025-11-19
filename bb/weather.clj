@@ -201,7 +201,6 @@
             [:script (h/raw "const plotData = " (json/encode plot-data) ";"
                             "Plotly.newPlot('plotly-div', plotData.data, plotData.layout);")]]]))
 
-
 (defn plot-next-3-days [data]
   ;; https://plotly.com/javascript/multiple-axes/
   (let [outmap {:time (-> data :hourly :time)
@@ -234,12 +233,12 @@
         width 1600
         height 700
         plot-data {:data [temp prec precprob]
-                   :layout {:title {:text "Wetterplot"}
+                   :layout {:title {:text (format "Wetter in %s: 3-Tage-Vorschau" (:long current-place))}
                             :width width
                             :height height
                             :xaxis {;:title {:text "DateTime"} 
                                     :type "date"
-                                   :domain [0 0.9]
+                                    :domain [0 0.9]
                                    ; :tickformat "%a %d.%m"
                                     }
 ;                            :dtick (* 3 60 60 1000)
