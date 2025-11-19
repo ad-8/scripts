@@ -40,10 +40,8 @@
   (let [vcp-number (case what
                      :brightness 10
                      :contrast   12
-                     (throw (ex-info "invalid type for `what`" {:valid-types [:brightness :contrast]})))
-        cmd (format "ddcutil setvcp %d %d" vcp-number val)]
-    (println "cmd =" cmd)
-    (shell cmd)))
+                     (throw (ex-info "invalid type for `what`" {:valid-types [:brightness :contrast]})))]
+    (sh "ddcutil" "setvcp" vcp-number val)))
 
 (comment
   (try (set-two-monitors :foo 23)
