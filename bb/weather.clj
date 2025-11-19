@@ -239,7 +239,7 @@
                             :height height
                             :xaxis {;:title {:text "DateTime"} 
                                     :type "date"
-                                   :domain [0.1 0.9]
+                                   :domain [0 0.9]
                                    ; :tickformat "%a %d.%m"
                                     }
 ;                            :dtick (* 3 60 60 1000)
@@ -255,8 +255,7 @@
                                      :overlaying "y"
                                      :side :right
                                      :anchor :free
-                                     ; TODO (someday (tm)) fucking position does not work
-                                     :positon 0.85
+                                     :position 0.95
                                      :range [0 100]}
                             }}
         filename "/tmp/plotly-weather-chart.html"
