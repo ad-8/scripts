@@ -65,13 +65,52 @@
     (do (shell "notify-send 'fatal error in licht.clj' 'set-ext-contrast: no setup for this hostname'")
         (System/exit 1))))
 
+(defn shell-out [cmd]
+  (-> (shell {:out :string} cmd) :out str/trim))
+
+(defn extract-brightness [s]
+  (last (re-find  #"\bcurrent value =\s*(\d+)\b" s)))
+
+(defn extract-contrast [s]
+  (last (re-find  #"\bcurrent value =\s*(\d+)\b" s)))
+
+(comment 
+  (re-find  #"\bcurrent value =\s*(\d+)\b" "VCP code 0x10 (Brightness                    ): current value =   100, max value =   100")
+
+  (->> (shell-out "ddcutil detect")
+       str/split-lines
+       (map str/trim)
+       (map-indexed (fn [idx s] [idx s])))
+  )
+
+(defn get-two-monitors []
+  (let [monitors (->> (shell-out "ddcutil detect") str/split-lines (map str/trim))
+        m1 (format "%s: %s (%s)" (nth monitors 0) (nth monitors 4) (nth monitors 9))
+        m2 (format "%s: %s (%s)" (nth monitors 12) (nth monitors 16) (nth monitors 21))
+        b1 (-> (shell-out  "ddcutil --display 1 getvcp 10") extract-brightness)
+        b2 (-> (shell-out "ddcutil --display 2 getvcp 10") extract-brightness)
+        c1 (-> (shell-out "ddcutil --display 1 getvcp 12") extract-contrast)
+        c2 (-> (shell-out "ddcutil --display 2 getvcp 12") extract-contrast)]
+
+    (println (str/replace m1 #"\s+" " "))
+    (println "brightness:" b1)
+    (println "contrast:  " c1)
+    (println (str/replace m2 #"\s+" " "))
+    (println "brightness:" b2)
+    (println "contrast:  " c2)))
+
+
+(defn get-one-monitor []
+  (let [brigh (-> (sh "ddcutil" "getvcp" "10") :out extract-brightness)
+        cont  (-> (sh "ddcutil" "getvcp" "12") :out extract-contrast)]
+    (format "Brightness: %s\nContrast:   %s\n"  brigh cont)))
 
 (defn get-ext-vals []
-  (let [brigh (-> (sh "ddcutil" "getvcp" "10") :out)
-        cont  (-> (sh "ddcutil" "getvcp" "12") :out)
-        brightness (last (re-find  #"\bcurrent value =\s*(\d+)\b" brigh))
-        contrast   (last (re-find  #"\bcurrent value =\s*(\d+)\b" cont))]
-    (format "Brightness: %s\nContrast:   %s\n"  brightness contrast)))
+  (case (get-hostname)
+    "ax-bee" (get-two-monitors)
+    "ax-mac" (get-one-monitor)
+    (do (shell "notify-send 'fatal error in licht.clj' 'set-ext-brightness: no setup for this hostname'")
+        (System/exit 1))))
 
 
 (defn set-color-temp
