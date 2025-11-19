@@ -109,7 +109,7 @@
   (case (get-hostname)
     "ax-bee" (get-two-monitors)
     "ax-mac" (get-one-monitor)
-    (do (shell "notify-send 'fatal error in licht.clj' 'set-ext-brightness: no setup for this hostname'")
+    (do (shell "notify-send 'fatal error in licht.clj' 'get-ext-vals: no setup for this hostname'")
         (System/exit 1))))
 
 
@@ -132,11 +132,15 @@
 
 
 (defn print-all-the-light-we-can-see []
-  (let [disp (get-light-screen)
-        keyb (get-light-keyboard)
-        ext  (get-ext-vals)]
-    (printf "%s\nDisplay:  %s\nKeyboard: %s" (heading "Internal") disp keyb)
-    (printf "\n\n%s\n%s" (heading "External") ext)))
+  (case (get-hostname)
+    "ax-bee" (get-two-monitors)
+    "ax-mac" (let [disp (get-light-screen)
+                   keyb (get-light-keyboard)
+                   ext  (get-ext-vals)]
+               (printf "%s\nDisplay:  %s\nKeyboard: %s" (heading "Internal") disp keyb)
+               (printf "\n\n%s\n%s" (heading "External") ext))
+    (do (shell "notify-send 'fatal error in licht.clj' 'print-all-the-light-we-can-see: no setup for this hostname'")
+        (System/exit 1))))
 
 (defn illuminate! [int-b key-b ext-b ext-c col-t]
   (light-screen int-b) (light-keyboard key-b)
