@@ -36,6 +36,14 @@
     (shell "sleep 2")
     (shell set-display2)))
 
+(defn set-one-monitor [what val]
+  (let [vcp-number (case what
+                     :brightness 10
+                     :contrast   12
+                     (throw (ex-info "invalid type for `what`" {:valid-types [:brightness :contrast]})))
+        cmd (format "ddcutil setvcp %d %d" vcp-number val)]
+    (shell cmd)))
+
 (comment
   (try (set-two-monitors :foo 23)
        (catch Exception e (println (.getMessage e) "\n" (ex-data e)))) 
@@ -46,7 +54,7 @@
 (defn set-ext-brightness [val]
   (case (get-hostname)
     "ax-bee" (set-two-monitors :brightness val)
-    "ax-mac" (sh "ddcutil" "setvcp" "10" (str val))
+    "ax-mac" (set-one-monitor :brightness val)
     (do (shell "notify-send 'fatal error in licht.clj' 'set-ext-brightness: no setup for this hostname'")
         (System/exit 1))))
 
@@ -54,7 +62,7 @@
 (defn set-ext-contrast [val]
   (case (get-hostname)
     "ax-bee" (set-two-monitors :contrast val)
-    "ax-mac" (sh "ddcutil" "setvcp" "12" (str val))
+    "ax-mac" (set-one-monitor :contrast val)
     (do (shell "notify-send 'fatal error in licht.clj' 'set-ext-contrast: no setup for this hostname'")
         (System/exit 1))))
 
