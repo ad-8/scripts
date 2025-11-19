@@ -3,7 +3,13 @@
   (:require [clojure.java.shell :refer [sh]]
             [clojure.string :as str]
             [clojure.edn]
-            [babashka.process :refer [shell process]]))
+            [babashka.process :refer [shell process]])
+  (:import java.net.InetAddress))
+
+
+
+(defn get-hostname []
+  (.getHostName (InetAddress/getLocalHost)))
 
 
 (defn light-screen [brightness]
@@ -19,19 +25,38 @@
 (defn get-light-keyboard []
   (-> (sh "light" "-s" "sysfs/leds/smc::kbd_backlight" "-G") :out (str/trim)))
 
-(defn set-ext-brightness [val]
-  (let [set-display1 (format "ddcutil --display 1 setvcp 10 %s" val)
-        set-display2 (format "ddcutil --display 2 setvcp 10 %s" (+ val 10))]
+(defn set-two-monitors [what val]
+  (let [vcp-number (case what
+                     :brightness 10
+                     :contrast   12
+                     (throw (ex-info "invalid type for `what`" {:valid-types [:brightness :contrast]})))
+        set-display1 (format "ddcutil --display 1 setvcp %d %s" vcp-number val)
+        set-display2 (format "ddcutil --display 2 setvcp %d %s" vcp-number (+ val 0))]
     (shell set-display1)
     (shell "sleep 2")
     (shell set-display2)))
 
+(comment
+  (try (set-two-monitors :foo 23)
+       (catch Exception e (println (.getMessage e) "\n" (ex-data e)))) 
+  ;;
+  )
+
+;; TODO by night +10 (day +0)
+(defn set-ext-brightness [val]
+  (case (get-hostname)
+    "ax-bee" (set-two-monitors :brightness val)
+    "ax-mac" (sh "ddcutil" "setvcp" "10" (str val))
+    (do (shell "notify-send 'fatal error in licht.clj' 'set-ext-brightness: no setup for this hostname'")
+        (System/exit 1))))
+
+;; TODO by night +15 (day +10)
 (defn set-ext-contrast [val]
-  (let [set-display1 (format "ddcutil --display 1 setvcp 12 %s" val)
-        set-display2 (format "ddcutil --display 2 setvcp 12 %s" (+ val 25))]
-    (shell set-display1)
-    (shell "sleep 2")
-    (shell set-display2)))
+  (case (get-hostname)
+    "ax-bee" (set-two-monitors :contrast val)
+    "ax-mac" (sh "ddcutil" "setvcp" "12" (str val))
+    (do (shell "notify-send 'fatal error in licht.clj' 'set-ext-contrast: no setup for this hostname'")
+        (System/exit 1))))
 
 
 (defn get-ext-vals []
@@ -55,7 +80,7 @@
     (sh "sct" (str n))
     ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
     (do (try (shell "pkill -f gammastep")
-             (catch Exception _e (println "error killing gammastep"))) 
+             (catch Exception _e (println "error killing gammastep")))
         ;; starts a process asynchronously, `shell` used to block here:
         (babashka.process/process "gammastep -O" (str n)))))
 
@@ -96,7 +121,7 @@
                "ni"  {:name "night"
                       :vals [2 2 15 15 3000]}
                "ni2"  {:name "night"
-                      :vals [2 2 8 8 3000]}
+                       :vals [2 2 8 8 3000]}
                "max"  {:name "Max"
                        :vals [100 0 100 100 6500]}
                ;; "max-e" {:name "Max-External"
