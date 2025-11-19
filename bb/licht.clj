@@ -41,7 +41,8 @@
                      :brightness 10
                      :contrast   12
                      (throw (ex-info "invalid type for `what`" {:valid-types [:brightness :contrast]})))
-        cmd (format "ddcutil setvcp %d %s" vcp-number (str val))]
+        cmd (format "ddcutil setvcp %d %d" vcp-number val)]
+    (println "cmd =" cmd)
     (shell cmd)))
 
 (comment
