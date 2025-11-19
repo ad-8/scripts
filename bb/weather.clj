@@ -10,7 +10,8 @@
             [babashka.http-client :as http]
             [cheshire.core :as json]
             [clojure.edn :as edn]
-            [clojure.walk :refer [keywordize-keys]]))
+            [clojure.walk :refer [keywordize-keys]]
+            [hiccup2.core :as h]))
 
 
 
@@ -185,13 +186,83 @@
     fmt))
 
 
-(let [arg1 (first *command-line-args*)
+(defn html-template
+  "Creates a simple HTML template for a website with a Plotly plot."
+  [div-width div-height plot-data]
+  (h/html (h/raw "<!DOCTYPE html>")
+          [:html
+           [:head
+            [:title "Wetterplot.clj"]
+            [:script {:src "https://cdn.plot.ly/plotly-3.3.0.min.js"
+                      :charset "utf-8"}]]
+           [:body
+            [:div {:id "plotly-div"
+                   :style (str "width:" div-width "px;height:" div-height "px;")}]
+            [:script (h/raw "const plotData = " (json/encode plot-data) ";"
+                            "Plotly.newPlot('plotly-div', plotData.data, plotData.layout);")]]]))
+(defn plot-next-3-days [data]
+  ;; https://plotly.com/javascript/multiple-axes/
+  (let [outmap {:time (-> data :hourly :time)
+                :temp (-> data :hourly :temperature_2m)
+                :prec (-> data :hourly :precipitation)
+                :prec_prob (-> data :hourly :precipitation_probability)
+                :sunshine_hrs (flatten (map (fn [x] (repeat 24 x)) (sunshine_hrs data)))
+                :loc (:long current-place)}
+        temp {:x (:time outmap)
+              :y (:temp outmap)
+              :type "scatter"
+              :mode "lines"
+              :yaxis "y"
+              :marker {:color :orange}
+              :text (:time outmap)
+              :name "Temperatur"}
+        prec {:x (:time outmap)
+              :y (:prec outmap)
+              :yaxis "y2"
+              :type "bar"
+              :marker {:color :blue}
+;     :mode "lines"
+;     :text (:time outmap)
+              :name "Niederschlag"}
+        width 1600
+        height 700
+        plot-data {:data [temp prec]
+                   :layout {:title {:text "Wetterplot"}
+                            :width width
+                            :height height
+                            :xaxis {;:title {:text "DateTime"} 
+                                    :type "date"
+                                   ; :tickformat "%a %d.%m"
+                                    }
+;                            :dtick (* 3 60 60 1000)
+                            :yaxis {:title {:text "Temperatur [°C]"}
+                                   ; :color :red
+                                    }
+                            :yaxis2 {:title {:text "Niederschlag [mm]"}
+                                     :overlaying "y"
+                                     :side "right"
+                                     ;;  :linecolor "#2ca02c"
+                                   ;  :color :green
+                                     :range [0 (inc (apply max (:prec outmap)))]}  ; Adjust to your max precip
+                            }}
+        filename "/tmp/plotly-weather-chart.html"
+        html-template (html-template width height plot-data)]
+
+    (clojure.pprint/pprint plot-data)
+
+    (spit filename html-template)
+    (println "Plot saved to" filename ", opening in Firefox...")
+    (shell {:out :inherit} (format "firefox %s" filename)))
+  )
+
+(let [action (first *command-line-args*)
       resp (make-request url query-params)
       data (-> resp :body json/decode keywordize-keys)
-      output (case arg1
+      output (case action
                "dunst" (forecast data)
                "dwm" (dwmblocks data "dwm")
                "i3" (dwmblocks data "i3")
+               "plot" (plot-next-3-days data)
                ":invalid-argument")]
   (println output))
 
@@ -336,16 +407,3 @@
                 (:cloud_cover hourly)))
   ;;
   )
-
-
-(comment
-  (def outmap {:time (-> data :hourly :time)
-               :temp (-> data :hourly :temperature_2m)
-               :prec (-> data :hourly :precipitation)
-               :prec_prob (-> data :hourly :precipitation_probability)
-               :sunshine_hrs (flatten (map (fn [x] (repeat 24 x)) (sunshine_hrs data)))
-               :loc (:long current-place)})
-
-  outmap
-  (spit "/tmp/open-meteo.json" (json/encode outmap))
-  (shell "/home/ax/my/code/python/weather-plot/venv/bin/python" "/home/ax/my/code/python/weather-plot/main.py"))
