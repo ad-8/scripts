@@ -150,6 +150,8 @@
 
 (def settings {"aus"  {:name "AUS"
                        :vals [0 0 0 0 0]}
+               "hi+"   {:name "High"
+                       :vals [90 0 90 90 6500]}
                "hi"   {:name "High"
                        :vals [80 0 80 80 6000]}
                "hi2"  {:name "High2"
