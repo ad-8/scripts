@@ -100,7 +100,7 @@
       "Stopped" (printf "") ;; does not show up on waybar
       (println "TODO: default case"))))
 
-(def supported-players ["strawberry" "fooyin" "emms"])
+(def supported-players #{"strawberry" "fooyin" "emms"})
 
 (defn supported-player? [metadata] 
   (let [line (-> metadata str/split-lines first)]
@@ -134,8 +134,8 @@
                    (re-find #"ProtonVPN (\w+#\d+)|([A-Z]{2}-\d+)|muc")
                    (filter some?))
         out-str (if (and (some? match) (seq match))
-          (json/encode {:text (str " " (last match))})
-          (json/encode {:text "NO VPN CONN" :state "Critical" :class "down"}))]
+                  (json/encode {:text (str " " (last match))})
+                  (json/encode {:text "NO VPN CONN" :state "Critical" :class "down"}))]
     (printf "%s" out-str)))
 
 
@@ -148,6 +148,12 @@
       (printf " ")
       (printf " "))))
 
+(comment
+ (waybar-vpn) 
+
+
+  ;;
+  )
 
 (let [action (first *command-line-args*)]
   (case action
