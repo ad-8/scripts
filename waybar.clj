@@ -47,8 +47,10 @@
 
 
 ; total memory [GiB] as reported by `free -h`
+; TODO just parse free -h output ...
 (def host->memory {:ax-mac  7.7
                    :ax-fuji 15.0
+                   :ax-x1c 15.0
                    :ax-bee 27.0})
 
 (defn- get-hostname []
