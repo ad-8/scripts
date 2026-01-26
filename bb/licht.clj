@@ -131,7 +131,6 @@
     ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
     (do (try (shell "/usr/bin/env killall hyprsunset")
              (catch Exception _e (println "error killing hyprsunset")))
-        ;; starts a process asynchronously, `shell` used to block here:
         (Thread/sleep 1000)
         (shell "hyprsunset --temperature" (str n)))))
 
