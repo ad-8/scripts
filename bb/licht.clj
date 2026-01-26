@@ -129,10 +129,11 @@
   (if (= "x11" (get-session-type))
     (shell (format "/usr/bin/env sct %s" (str n)))
     ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
-    (do (try (shell "pkill -f gammastep")
-             (catch Exception _e (println "error killing gammastep")))
+    (do (try (shell "/usr/bin/env killall hyprsunset")
+             (catch Exception _e (println "error killing hyprsunset")))
         ;; starts a process asynchronously, `shell` used to block here:
-        (babashka.process/process "gammastep -O" (str n)))))
+        (Thread/sleep 1000)
+        (shell "hyprsunset --temperature" (str n)))))
 
 
 
