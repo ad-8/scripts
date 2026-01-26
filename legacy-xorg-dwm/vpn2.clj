@@ -1,10 +1,6 @@
 #!/usr/bin/env bb
 (ns vpn2
-  (:require [babashka.process :refer [shell]]
-            [cheshire.core :as json]))
-
-
-;; sadly, protonvpn-cli is dead on arch linux
+  (:require [babashka.process :refer [shell]]))
 
 
 ; match e.g.: ["ProtonVPN DE#316" "DE#316"]
@@ -13,9 +9,8 @@
                    :out
                    (re-find #"ProtonVPN (\w+#\d+)|([A-Z]{2}-\d+)|muc")
                    (filter some?))]
-  (if (and (some? match) (seq match))
-    (json/encode {:text (str " " (last match))})
-    (json/encode {:text "NO VPN CONN" :state "Critical" :class "down"}))))
+    (if (and (some? match) (seq match))
+      (str " " (last match))
+      "NO VPN CONN")))
 
 (println (run))
-
