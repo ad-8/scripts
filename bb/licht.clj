@@ -133,6 +133,13 @@
              (catch Exception _e (println "error killing gammastep")))
         ;; starts a process asynchronously, `shell` used to block here:
         (babashka.process/process "gammastep -O" (str n)))))
+  (if (= "x11" (get-session-type))
+    (shell (format "sct %s" (str n)))
+    ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
+    (do (try (shell "pkill -f gammastep")
+             (catch Exception _e (println "error killing gammastep")))
+        ;; starts a process asynchronously, `shell` used to block here:
+        (babashka.process/process "gammastep -O" (str n)))))
 
 
 
