@@ -3,6 +3,8 @@
              [clojure.edn]
              [babashka.process :refer [shell process]]))
 
+;; a simple script to /somewhat/ simulate keychords,
+;; which are still missing in niri
 
 (def cmds
   {
@@ -13,10 +15,10 @@
    "thunar (file manager)" "thunar"
    })
 
-
-(let [user-choice (-> (process "echo" "-e" (str/join "\n" (into (sorted-map) cmds)))
+(let [user-choice (-> (process "echo -e" (str/join "\n" (keys cmds)))
                       (process {:out :string} "wmenu -i -l 15")
-                      deref :out str/trim clojure.edn/read-string first)
+                      deref :out str/trim)
       cmd-to-run (get cmds user-choice)]
-  (println user-choice "--" cmd-to-run)
+  (println user-choice "---" cmd-to-run)
   (shell cmd-to-run))
+
