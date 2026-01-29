@@ -1,7 +1,7 @@
 (ns launcher
   (:require  [clojure.string :as str]
              [clojure.edn]
-             [babashka.process :refer [shell process]]))
+             [babashka.process :refer [process shell]]))
 
 ;; a simple script to /somewhat/ simulate keychords,
 ;; which are still missing in niri
@@ -13,6 +13,7 @@
    "firefox" "firefox"
    "thunar (file manager)" "thunar"
    "volume control (pavu)" "pavucontrol"
+   "toggle bluetooth on/off" "rfkill toggle bluetooth"
    "rofi - files" "rofi -show recursivebrowser"
    "rofi - windows" "rofi -show window"
    "linkding std" "bb /home/ax/x/ax_bookmarks.clj std"
