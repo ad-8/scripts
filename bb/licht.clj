@@ -129,10 +129,10 @@
   (if (= "x11" (get-session-type))
     (shell (format "/usr/bin/env sct %s" (str n)))
     ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
-    (do (try (shell "/usr/bin/env killall hyprsunset")
-             (catch Exception _e (println "error killing hyprsunset")))
+    (do (try (shell "pkill -f gammastep")
+             (catch Exception _e (println "error killing gammastep")))
         (Thread/sleep 1000)
-        (shell "hyprsunset --temperature" (str n)))))
+        (shell "gammastep -O" (str n)))))
 
 
 
