@@ -9,10 +9,9 @@
 
 (defn waybar-date []
   (let [date-str (-> (shell {:out :string} "date '+%a %d.%m.'")
-            :out
-            str/trim)]
+                     :out
+                     str/trim)]
     (println date-str)))
-
 
 (defn- print-free-space [output-fmt]
   (let [free-space-on-root (->> (shell {:out :string} "df -h / --output=avail")
@@ -32,7 +31,6 @@
 (defn waybar-disk []
   (print-free-space "json"))
 
-
 (defn waybar-licht []
   (let [licht-val (slurp "/tmp/licht-curr-val")]
     (printf " %s" licht-val)))
@@ -44,14 +42,26 @@
         load-one-min (-> loadavg (str/split #"\s") first)]
     (printf " %s" load-one-min)))
 
+(comment
+; match 4.5 etc, -> Mem:\s+([\d.]+)\S+\s+([\d.]+)\S+
+; no units needed Mem:\s+([\d.]+)\S+\s+([\d.]+)\S+
 
+  (* 0.85 15)
 
-; total memory [GiB] as reported by `free -h`
-; TODO just parse free -h output ...
-(def host->memory {:ax-mac  7.7
-                   :ax-fuji 15.0
-                   :ax-x1c 15.0
-                   :ax-bee 27.0})
+  (->> (range 1 20)
+       (take 5)
+       (reduce +))
+
+;;
+  )
+
+(defn determine-memory
+  "returns total and used memory [GiB] as reported by `free -h`"
+  []
+  (let [[_full-match total used]
+        (re-find #"Mem:\s+([\d.]+)Gi\s+([\d.]+)Gi\s+" (:out (shell {:out :string} "free -h")))]
+
+    [(Float/parseFloat total) (Float/parseFloat used)]))
 
 (defn- get-hostname []
   (let [output (:out (shell {:out :string} "hostnamectl"))
@@ -60,14 +70,12 @@
       (last match)
       "unknown-hostname")))
 
-(defn- determine-css-class
-  "Determine the css class for waybar."
-  [hostname used]
-  (let [host-mem (get host->memory (keyword hostname))]
-    (if (nil? host-mem)
-      (if (> used 5.7) :low :ok)
-      (if (> used (- host-mem 2.0)) :low :ok))))
+(defn- determine-css-class [total used]
+  (if (> used (* 0.8 total))
+    :low
+    :ok))
 
+;; (determine-css-class 15 (* 0.81 15))
 ;; TODO filter in clj like in rust
 (defn- print-memory-info [output-fmt]
   (let [cmd "free -h | awk '/^Mem/ { print $3 \"/\" $2 }' | sed 's/i//g' | sed 's/G//'"
@@ -75,18 +83,20 @@
                 :out
                 str/trim
                 (str/replace "," "."))
-        [used _total] (str/split mem #"/")
-        class (determine-css-class (get-hostname) (Float/parseFloat used))
+        [total used] (determine-memory)
+        class (determine-css-class total used)
         fmt (format "󰍛 %s" mem)
         json (json/encode {:text fmt :class class})]
     (if (= "json" output-fmt)
       (println json)
       (println fmt))))
 
-(defn waybar-memory []
+(comment
+  (determine-memory)
   (print-memory-info "json"))
 
-
+(defn waybar-memory []
+  (print-memory-info "json"))
 
 (defn- stdout! [cmd]
   (-> (shell {:out :string} cmd) :out str/trim))
@@ -104,7 +114,7 @@
 
 (def supported-players #{"strawberry" "fooyin" "emms"})
 
-(defn supported-player? [metadata] 
+(defn supported-player? [metadata]
   (let [line (-> metadata str/split-lines first)]
     (some #(str/starts-with? line %) supported-players)))
 
@@ -128,7 +138,6 @@
             (let [status (-> (shell {:out :string} "sh -c 'setsid waybar >/dev/null 2>&1 &'") :exit)]
               (printf "killing waybar, status = %d\n" status)))))))
 
-
 ; match e.g.: ["ProtonVPN DE#316" "DE#316"]
 (defn waybar-vpn []
   (let [match (->> (shell {:out :string} "nmcli con show --active")
@@ -140,7 +149,6 @@
                   (json/encode {:text "NO VPN CONN" :state "Critical" :class "down"}))]
     (printf "%s" out-str)))
 
-
 (defn waybar-notification-status []
   (let [is-paused (-> (shell {:out :string} "dunstctl is-paused")
                       :out
@@ -151,10 +159,9 @@
       (printf " "))))
 
 (comment
- (waybar-vpn) 
+  (waybar-vpn)
 
-
-  ;;
+;;
   )
 
 (let [action (first *command-line-args*)]
