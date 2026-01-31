@@ -42,19 +42,6 @@
         load-one-min (-> loadavg (str/split #"\s") first)]
     (printf " %s" load-one-min)))
 
-(comment
-; match 4.5 etc, -> Mem:\s+([\d.]+)\S+\s+([\d.]+)\S+
-; no units needed Mem:\s+([\d.]+)\S+\s+([\d.]+)\S+
-
-  (* 0.85 15)
-
-  (->> (range 1 20)
-       (take 5)
-       (reduce +))
-
-;;
-  )
-
 (defn determine-memory
   "returns total and used memory [GiB] as reported by `free -h`"
   []
@@ -68,13 +55,6 @@
                   Float/parseFloat)]
 
     [total' used']))
-
-(defn- get-hostname []
-  (let [output (:out (shell {:out :string} "hostnamectl"))
-        match (re-find #"Static hostname:\s*(\S+)" output)]
-    (if match
-      (last match)
-      "unknown-hostname")))
 
 (defn- determine-css-class [total used]
   (if (> used (* 0.8 total))
@@ -159,12 +139,6 @@
     (if is-paused
       (printf " ")
       (printf " "))))
-
-(comment
-  (waybar-vpn)
-
-;;
-  )
 
 (let [action (first *command-line-args*)]
   (case action
