@@ -60,10 +60,14 @@
   []
   (let [[_full-match total used]
         (re-find #"Mem:\s+([\d.,]+)Gi\s+([\d.,]+)Gi\s+" (:out (shell {:out :string} "free -h")))
-        total' (str/replace total #"," ".")
-        used' (str/replace used #"," ".")]
+        total' (-> total
+                   (str/replace #"," ".")
+                   Float/parseFloat)
+        used' (-> used
+                  (str/replace #"," ".")
+                  Float/parseFloat)]
 
-    [(Float/parseFloat total') (Float/parseFloat used')]))
+    [total' used']))
 
 (defn- get-hostname []
   (let [output (:out (shell {:out :string} "hostnamectl"))
