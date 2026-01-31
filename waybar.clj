@@ -59,9 +59,11 @@
   "returns total and used memory [GiB] as reported by `free -h`"
   []
   (let [[_full-match total used]
-        (re-find #"Mem:\s+([\d.]+)Gi\s+([\d.]+)Gi\s+" (:out (shell {:out :string} "free -h")))]
+        (re-find #"Mem:\s+([\d.,]+)Gi\s+([\d.,]+)Gi\s+" (:out (shell {:out :string} "free -h")))
+        total' (str/replace total #"," ".")
+        used' (str/replace used #"," ".")]
 
-    [(Float/parseFloat total) (Float/parseFloat used)]))
+    [(Float/parseFloat total') (Float/parseFloat used')]))
 
 (defn- get-hostname []
   (let [output (:out (shell {:out :string} "hostnamectl"))
@@ -75,17 +77,10 @@
     :low
     :ok))
 
-;; (determine-css-class 15 (* 0.81 15))
-;; TODO filter in clj like in rust
 (defn- print-memory-info [output-fmt]
-  (let [cmd "free -h | awk '/^Mem/ { print $3 \"/\" $2 }' | sed 's/i//g' | sed 's/G//'"
-        mem (-> (shell {:out :string} "/usr/bin/env bash -c" cmd)
-                :out
-                str/trim
-                (str/replace "," "."))
-        [total used] (determine-memory)
+  (let [[total used] (determine-memory)
         class (determine-css-class total used)
-        fmt (format "󰍛 %s" mem)
+        fmt (format "󰍛 %.1f/%.1f" used total)
         json (json/encode {:text fmt :class class})]
     (if (= "json" output-fmt)
       (println json)
@@ -93,7 +88,10 @@
 
 (comment
   (determine-memory)
-  (print-memory-info "json"))
+  (format "%.0f" 15.6)
+  (print-memory-info "json")
+  ;;
+  )
 
 (defn waybar-memory []
   (print-memory-info "json"))
