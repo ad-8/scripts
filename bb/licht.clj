@@ -132,7 +132,7 @@
     (do (try (shell "pkill -f gammastep")
              (catch Exception _e (println "error killing gammastep")))
         (Thread/sleep 1000)
-        (shell "gammastep -O" (str n)))))
+        (babashka.process/process "gammastep -O" (str n)))))
 
 
 
