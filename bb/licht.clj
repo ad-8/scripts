@@ -33,7 +33,7 @@
         set-display1 (format "ddcutil --display 1 setvcp %d %s" vcp-number val)
         set-display2 (format "ddcutil --display 2 setvcp %d %s" vcp-number (+ val 0))]
     (shell set-display1)
-    (shell "sleep 2")
+    (Thread/sleep 500)
     (shell set-display2)))
 
 (defn set-one-monitor [what val]
@@ -131,7 +131,7 @@
     ;; w/o try/catch, this doesn't work if gammastep was never set or was killed manually
     (do (try (shell "pkill -f gammastep")
              (catch Exception _e (println "error killing gammastep")))
-        (Thread/sleep 1000)
+        (Thread/sleep 500)
         (babashka.process/process "gammastep -O" (str n)))))
 
 
