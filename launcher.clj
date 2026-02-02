@@ -1,9 +1,10 @@
 (ns launcher
   (:require  [clojure.string :as str]
              [clojure.edn]
+             [babashka.fs :as fs]
              [babashka.process :refer [process shell]]))
 
-;; a simple script to /somewhat/ simulate keychords,
+;; a simple script to /somewhat/ replace keychords,
 ;; which are still missing in niri
 
 (def cmds
@@ -18,11 +19,12 @@
    "rofi - files" "rofi -show recursivebrowser"
    "rofi - windows" "rofi -show window"
    "linkding std" "bb /home/ax/x/ax_bookmarks.clj std"
-   "linkding archived" "bb /home/ax/x/ax_bookmarks.clj archived"})
+   "linkding archived" "bb /home/ax/x/ax_bookmarks.clj archived"
+   "kill a process" "sh -c 'ps -u $USER -o pid,comm,args,%cpu,%mem | wmenu -i -l 10 -p Kill: | awk \"{print \\$1}\" | xargs -r kill'"})
 
 (def providers {:rofi "rofi -dmenu -p mode-open"
                 :wmenu (str "wmenu -i 
-                                -l 100 
+                                -l 20 
                                 -f \"Hack Nerd Font 11\" 
                                 -N \"#0c1014\"
                                 -n \"#99d1ce\"
@@ -33,7 +35,7 @@
                                 -p \"          Select action          \"")})
 
 (let [user-choice (-> (process "echo -e" (str/join "\n" (sort (keys cmds))))
-                      (process {:out :string} (:rofi providers))
+                      (process {:out :string} (:wmenu providers))
                       deref :out str/trim)
       cmd-to-run (get cmds user-choice)]
   (println user-choice "---" cmd-to-run)
