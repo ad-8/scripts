@@ -33,7 +33,7 @@
                                 -p \"          Select action          \"")})
 
 (let [user-choice (-> (process "echo -e" (str/join "\n" (sort (keys cmds))))
-                      (process {:out :string} (:wmenu providers))
+                      (process {:out :string} (:rofi providers))
                       deref :out str/trim)
       cmd-to-run (get cmds user-choice)]
   (println user-choice "---" cmd-to-run)
