@@ -8,22 +8,30 @@
 ;; which are still missing in niri
 
 (def cmds
-  {"bluetui (TUI)" "alacritty -T ax-bluetui -e bluetui"
-   "wiremix (TUI)" "alacritty -T ax-wiremix -e wiremix"
-   "brave" "brave"
-   "emacsclient" "emacsclient -c"
-   "firefox" "firefox"
-   "thunar (file manager)" "thunar"
-   "volume control (pavu)" "pavucontrol"
-   "toggle bluetooth on/off" "rfkill toggle bluetooth"
-   "rofi - files" "rofi -show recursivebrowser"
-   "rofi - windows" "rofi -show window"
-   "linkding std" "bb /home/ax/x/ax_bookmarks.clj std"
-   "linkding archived" "bb /home/ax/x/ax_bookmarks.clj archived"
-   "kill a process" "sh -c 'ps -u $USER -o pid,comm,args,%cpu,%mem | wmenu -i -l 10 -p Kill: | awk \"{print \\$1}\" | xargs -r kill'"})
+  {"8 brave" "brave"
+   "2 firefox" "firefox"
+   "4 qutebrowser" "qutebrowser"
+   "3 thunar (file manager)" "thunar"
+   "linkding bookmarks std" "bb /home/ax/x/ax_bookmarks.clj std"
+   "linkding bookmarks archived" "bb /home/ax/x/ax_bookmarks.clj archived"
+   "1 system" "bb /home/ax/scripts/launcher.clj sys"
+   "9 rofi"   "bb /home/ax/scripts/launcher.clj rofi"})
 
-(def providers {:rofi "rofi -dmenu -p mode-open"
-                :wmenu (str "wmenu -i 
+(def sys
+  {"1 bluetui (TUI)" "alacritty -T ax-bluetui -e bluetui"
+   "2 wiremix (TUI)" "alacritty -T ax-wiremix -e wiremix"
+   "3 kill a process" "sh -c 'ps -u $USER -o pid,comm,args,%cpu,%mem | wmenu -i -l 10 -p Kill: | awk \"{print \\$1}\" | xargs -r kill'"
+   "4 volume control (pavu)" "pavucontrol"
+   "5 toggle bluetooth on/off" "rfkill toggle bluetooth"})
+
+(def rofi
+  {"rofi - files" "rofi -show recursivebrowser"
+   "rofi - windows" "rofi -show window"})
+
+;; (println *file*)
+
+(defn providers [prompt] {:rofi "rofi -dmenu -p mode-open"
+                          :wmenu (format "wmenu -i 
                                 -l 20 
                                 -f \"Hack Nerd Font 11\" 
                                 -N \"#0c1014\"
@@ -32,12 +40,20 @@
                                 -m \"#99d1ce\"
                                 -S \"#195466\"
                                 -s \"#99d1ce\"
-                                -p \"          Select action          \"")})
+                                -p \"%s\"" prompt)})
 
-(let [user-choice (-> (process "echo -e" (str/join "\n" (sort (keys cmds))))
-                      (process {:out :string} (:wmenu providers))
-                      deref :out str/trim)
-      cmd-to-run (get cmds user-choice)]
-  (println user-choice "---" cmd-to-run)
-  (shell cmd-to-run))
+(defn runit! [what prompt]
+  (let [dmenu-cmd (:wmenu (providers prompt))
+        input (str/join "\n" (sort (keys what)))
+        user-choice (-> (process {:in input :out :string} dmenu-cmd)
+                        deref :out str/trim)
+        cmd-to-run (get what user-choice)]
+    (println user-choice "---" cmd-to-run)
+    (shell cmd-to-run)))
 
+(let [arg (first *command-line-args*)]
+  (case arg
+    "main" (runit! cmds "          Select main            ")
+    "sys"  (runit! sys  "          Select sys             ")
+    "rofi" (runit! rofi "          Select rofi            ")
+    (System/exit 1)))
