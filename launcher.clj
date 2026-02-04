@@ -14,8 +14,8 @@
    "3 thunar (file manager)" "thunar"
    "linkding bookmarks std" "bb /home/ax/x/ax_bookmarks.clj std"
    "linkding bookmarks archived" "bb /home/ax/x/ax_bookmarks.clj archived"
-   "1 system" "bb /home/ax/scripts/launcher.clj sys"
-   "9 rofi"   "bb /home/ax/scripts/launcher.clj rofi"})
+   "1 system" (format "bb %s sys" *file*)
+   "9 rofi"   (format "bb %s rofi" *file*)})
 
 (def sys
   {"1 bluetui (TUI)" "alacritty -T ax-bluetui -e bluetui"
@@ -27,8 +27,6 @@
 (def rofi
   {"rofi - files" "rofi -show recursivebrowser"
    "rofi - windows" "rofi -show window"})
-
-;; (println *file*)
 
 (defn providers [prompt] {:rofi "rofi -dmenu -p mode-open"
                           :wmenu (format "wmenu -i 
