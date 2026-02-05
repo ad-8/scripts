@@ -40,7 +40,7 @@
                                 -s \"#99d1ce\"
                                 -p \"%s\"" prompt)})
 
-(defn runit! [what prompt]
+(defn run-it! [what prompt]
   (let [dmenu-cmd (:wmenu (providers prompt))
         input (str/join "\n" (sort (keys what)))
         user-choice (-> (process {:in input :out :string} dmenu-cmd)
@@ -51,7 +51,7 @@
 
 (let [arg (first *command-line-args*)]
   (case arg
-    "main" (runit! cmds "          Select main            ")
-    "sys"  (runit! sys  "          Select sys             ")
-    "rofi" (runit! rofi "          Select rofi            ")
+    "main" (run-it! cmds "          Select main            ")
+    "sys"  (run-it! sys  "          Select sys             ")
+    "rofi" (run-it! rofi "          Select rofi            ")
     (System/exit 1)))
